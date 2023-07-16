@@ -98,7 +98,7 @@ class Gander
             'url' => substr(str_replace($request->root(), '', $request->fullUrl()), -254),
             'request_body_json' => $request->isJson() ? $request->getContent() : null,
             'response_body_json' => $responseBodyJson,
-            'user_id' => @auth()->guard('api')->user()->id ?? null,
+            'user_id' => $userId,
             'user_ip' => $request->ip(),
             'elapsed_seconds' => number_format(($endHrTime - $startHrTime) / 1000000000, 5),
             'created_at' => date('Y-m-d H:i:s'),
