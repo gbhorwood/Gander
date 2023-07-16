@@ -1,0 +1,70 @@
+<!doctype html> <!-- Important: must specify -->
+<html>
+<head>
+  <meta charset="utf-8"> <!-- Important: rapi-doc uses utf8 charecters -->
+  <meta name="viewport" content="width=device-width, minimum-scale=1, initial-scale=1, user-scalable=yes">
+    <link href="https://fonts.googleapis.com/css?family=Varela+Round" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;600&family=Roboto+Mono&display=swap" rel="stylesheet">
+  <script type="module" src="https://unpkg.com/rapidoc/dist/rapidoc-min.js"></script>
+  <style>
+  </style>
+
+</head>
+<body>
+
+    <rapi-doc
+        spec-url = "openapi.json"
+        primary-color = "#333f54"
+        secondary-color="#e6e1fc"
+        render-style = "read"
+        show-header='false'
+        allow-search='false'
+        show-info	= "false"
+        allow-authentication = "true"
+        allow-server-selection = "false"
+        nav-bg-color = "#333f54"
+        nav-text-color="#e6e1fc"
+        primary-color ="#E63946"
+        nav-accent-color="#E63946"
+        theme="light"
+        >
+
+        <!--
+        logo
+        -->
+		<img slot="nav-logo" src="https://cloverhitch-public-assets.s3.us-west-2.amazonaws.com/bintracker-logo.png" width=240 height=240/>
+
+        <!--
+        stats explanation
+        -->
+        <div slot="tag--stats">
+            <i>Basic statistics</i>.
+            <br>
+            Statistics grouped my method/endpoint and limited by time range described as period from the present, ie '2 days ago'.
+        </div>
+
+        <!--
+        logs explanation
+        -->
+        <div slot="tag--logs">
+            <i>Detailed logs on individual requests</i>.
+            <br>
+        </div>
+
+        <!--
+        foot
+        -->
+        <center slot="footer">
+            <hr style="width:50%">
+            <p>Fruitbat Studios / Cloverhitch Technologies / Kludgetastic Implementations</p>
+            <p>
+                <a href="https://dev.to/gbhorwood"><img src="https://d2fltix0v2e0sb.cloudfront.net/dev-rainbow.png" width=20 height=20></a>
+                <a href="https://github.com/gbhorwood"><img src="https://static-00.iconduck.com/assets.00/github-icon-256x256-sgutmi4g.png" width=20 height=20></a> 
+                <a href="https://gbhorwood.hashnode.dev"><img src="https://cdn.hashnode.com/res/hashnode/image/upload/v1611902473383/CDyAuTy75.png?auto=compress" width=20 height=20></a>
+            </p>
+        </center>
+
+    </rapi-doc>
+
+</body>
+</html>

@@ -1,0 +1,449 @@
+#-----------------------------------------------------
+# bintracker swagger.yaml
+#
+
+openapi: "3.0.3"
+info:
+  version: 1.0.0
+  title: Gander
+  description: Gander reporting api
+
+paths:
+
+
+  #-----------------------------------------------------
+  # Stats
+
+  ###
+  # GET /gander/requests/stats/{number}/{units}/ago
+  #
+  /gander/requests/stats/{number}/{units}/ago:
+    get:
+      summary: GET stats
+      tags:
+        - stats
+      description: Get stats on requests by their method/endpoint for a time period defined
+                   by a point in the past to now, ie. 'five hours ago'.
+      operationId: GanderController.getRequestsStats
+      parameters:
+        - name: number
+          in: path
+          required: true
+          description: The number of time units in the past that defines the reporting period. ie, for '5 hours ago', this is 5.
+          schema:
+            type : integer
+            format: int64
+            minimum: 1
+          example: 5
+        - name: units
+          in: path
+          required: true
+          description: The name of the time unit that defines the reporting period. One of 'minute', 'hour', 'day' or 'month'.
+          schema:
+            type : string
+          example: hour
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/request_stats_response'
+        403:
+          description: FORBIDDEN
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+
+  #-----------------------------------------------------
+  # Logs
+
+  ###
+  # GET /gander/requests/logs/{number}/{units}/ago
+  #
+  /gander/requests/logs/{number}/{units}/ago:
+    get:
+      summary: GET request logs digest
+      tags:
+        - logs
+      description: Gets one page of request for the reporting period defined
+                   by a point in the past to now, ie. 'five hours ago'.
+      operationId: GanderController.getRequestsLogs
+      parameters:
+        - name: number
+          in: path
+          required: true
+          description: The number of time units in the past that defines the reporting period. ie, for '5 hours ago', this is 5.
+          schema:
+            type : integer
+            format: int64
+            minimum: 1
+          example: 5
+        - name: units
+          in: path
+          required: true
+          description: The name of the time unit that defines the reporting period. One of 'minute', 'hour', 'day' or 'month'.
+          schema:
+            type : string
+          example: hour
+        - name: page
+          in: query
+          required: false
+          description: The page number
+          schema:
+            type : integer
+            format: int64
+            minimum: 1
+            default: 1
+          example: 2
+        - name: size
+          in: query
+          required: false
+          description: The number of records per page
+          schema:
+            type : integer
+            format: int64
+            minimum: 1
+            default: 10
+          example: 5
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/request_logs_digest_response'
+        403:
+          description: FORBIDDEN
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+
+  ###
+  # GET /gander/requests/{request_id}
+  #
+  /gander/requests/{request_id}:
+    get:
+      summary: GET request
+      tags:
+        - logs
+      description: Gets one request including the stack, identified by `request_id`
+      operationId: GanderController.getRequest
+      parameters:
+        - name: request_id
+          in: path
+          required: true
+          description: The id of the request
+          schema:
+            type : string
+          example: 22d76bd2a3c2de
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/request_response'
+        403:
+          description: FORBIDDEN
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+
+components:
+  
+  #####
+  # schemas
+  # all request and response json object are described here and 
+  # referenced in endpoint definitions using the '$ref' command.
+  # keep response and request schemas separate, even if they are identical.
+  #
+  # put example data in the 'example:' block of the endpoint
+  schemas:
+
+    #-----------------------------------------------------
+    # response schemas
+    
+    ###
+    # response: request_stats_response
+    request_stats_response:
+      type: object
+      properties:
+        method:
+          type: string
+          description: The http method
+          example: GET
+          nullable: false
+        endpoint:
+          type: string
+          description: The endpoint as defined in the route
+          example: /api/records/{id}
+          nullable: false
+        total:
+          type : integer
+          format: int64
+          minimum: 1
+          description: The total number of requests to this endpoint, both successes and errors, in the reporting period
+          example: 57
+        success_percent:
+          type : integer
+          format: int64
+          minimum: 0
+          maximum: 100
+          description: The percentage of requests that had an HTTP response in the 200 range
+          example: 99
+        average_seconds:
+          type: number
+          format: float
+          description: The average response time, in seconds
+          example: 0.001455
+        responses:
+          type: array
+          description: The number of response for each type of HTTP status code
+          items:
+            type: object
+            properties:
+              response_status:
+                type: integer
+                format: int64
+                nullable: false
+                description: The HTTP status code
+                example: 200
+              response_status_text:
+                type: string
+                nullable: false
+                description: The text associated with the HTTP status code
+                example: OK
+              total:
+                type: integer
+                format: int64
+                nullable: false
+                description: The number of responses for this HTTP status code
+                example: 54
+
+    ###
+    # response: request_logs_digest_response
+    request_logs_digest_response:
+      type: object
+      properties:
+        request_id:
+          type: string
+          description: Unique id of this request
+          nullable: false
+          example: b271c17d324c2e
+        method:
+          type: string
+          description: The http method
+          example: GET
+          nullable: false
+        endpoint:
+          type: string
+          description: The endpoint as defined in the route
+          example: /api/records/{id}
+          nullable: false
+        response_status:
+          type: integer
+          format: int64
+          nullable: false
+          description: The HTTP status code
+          example: 200
+        response_status_text:
+          type: string
+          nullable: false
+          description: The text associated with the HTTP status code
+          example: OK
+        elapsed_seconds:
+          type: number
+          nullable: true
+          format: float
+          description: The response time, in seconds, of this request
+          example: 0.001455
+        user_id:
+          type: integer
+          format: int64
+          nullable: true
+          description: The id of the user making the request if any
+          example: 18
+        user_ip:
+          type: string
+          nullable: true
+          description: The ip address of the user making the request if any
+          example: "192.168.1.70"
+        created_at:
+          type: string
+          nullable: false
+          description: The server time the request was made as Y-m-d H:i:s
+          example: 2024-09-12 12:34:56
+
+    ###
+    # response: request_response
+    request_response:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          nullable: false
+          description: The internal id
+          example: 1
+        request_id:
+          type: string
+          description: Unique id of this request
+          nullable: false
+          example: b271c17d324c2e
+        method:
+          type: string
+          description: The http method
+          example: GET
+          nullable: false
+        endpoint:
+          type: string
+          description: The endpoint as defined in the route
+          example: /api/records/{id}
+          nullable: false
+        response_status:
+          type: integer
+          format: int64
+          nullable: false
+          description: The HTTP status code
+          example: 200
+        response_status_text:
+          type: string
+          nullable: false
+          description: The text associated with the HTTP status code
+          example: OK
+        url:
+          type: string
+          nullable: false
+          description: The full url of the request including query string
+          example: /api/items/units/8?foo=bar2
+        request_body_json:
+          type: string
+          nullable: true
+          description: The json request body as a string
+          example: '{"name": "gbhorwood"}'
+        response_body_json:
+          type: string
+          nullable: true
+          description: The json response body as a string
+          example: '{"message": "success"}'
+        elapsed_seconds:
+          type: number
+          nullable: true
+          format: float
+          description: The response time, in seconds, of this request
+          example: 0.001455
+        user_id:
+          type: integer
+          format: int64
+          nullable: true
+          description: The id of the user making the request if any
+          example: 18
+        user_ip:
+          type: string
+          nullable: true
+          description: The ip address of the user making the request if any
+          example: "192.168.1.70"
+        stack:
+          type: array
+          description:
+          items:
+            $ref: '#/components/schemas/request_stack_response'
+        created_at:
+          type: string
+          nullable: false
+          description: The server time the request was made as Y-m-d H:i:s
+          example: 2024-09-12 12:34:56
+
+    ###
+    # response: request_stack_response
+    request_stack_response:
+      type: object
+      properties:
+        request_id:
+          type: string
+          description: Unique id of this request
+          nullable: false
+          example: b271c17d324c2e
+        sequence:
+          type: integer
+          format: int64
+          nullable: false
+          description: The order in which this log was written
+          example: 2
+        user_id:
+          type: integer
+          format: int64
+          nullable: true
+          description: The id of the user making the request, ie from passport, if any.
+          example: 7
+        file:
+          type: string
+          nullable: false
+          description:
+          example:
+
+
+    #-----------------------------------------------------
+    # request schemas
+
+
+    #-----------------------------------------------------
+    # pagination schemas
+
+    pagination:
+      type: object
+      properties:
+        has_more:
+          type: boolean
+          description: true if there are more pages
+          example: true
+        current_page:
+          type: integer
+          description: the number of the page that has been requested
+          example: 3
+        last_page:
+          type: integer
+          description: the maximum number of pages in the data set for this size
+          example: 8
+        current_size:
+          type: integer
+          description: the number of records per page
+          example: 10
+
+    #-----------------------------------------------------
+    # error schemas
+
+    ###
+    # error: error
+    error:
+      type: object
+      properties:
+        error:
+          nullable: true
+          type: string
+          description: Basic error message, suitable for showing to users
+          example: An error has ocurred
+        details:
+          nullable: true
+          type: string
+          description: Details on the error message, if any. 
+          example: Some details on the error.

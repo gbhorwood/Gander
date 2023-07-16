@@ -1,0 +1,7 @@
+tags
+vendor
+.env
+.phpunit.result.cache
+tags.lock
+swagger/node_modules
+swagger/upload/*

@@ -1,0 +1,30 @@
+{
+    "name": "gbhorwood/gander",
+    "description": "An inspector for restful Laravel apis",
+    "type": "library",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Gbhorwood\\Gander\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "grant horwood",
+            "email": "ghorwood@fruitbat.studio"
+        }
+    ],
+    "require": {
+        "php": "^7.4|^8.0"
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Gbhorwood\\Gander\\GanderServiceProvider"
+            ]
+        }
+    },
+    "require-dev": {
+        "phpstan/phpstan": "^1.10"
+    }
+}

@@ -1,0 +1,1048 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+
+    <script>
+
+        $(document).ready(function () {
+
+            /**
+             * Configuration values
+             */
+            api_domain = '!!apiDomain!!'
+            api_key = '!!apiKey!!'
+            api_key_name = '!!apiKeyName!!'
+
+            /**
+             * Returned stats data
+             */
+            stats = []
+
+            /**
+             * Returned logs data
+             */
+            logs = []
+
+            /**
+             * Units to track the start time of the time range
+             */
+            var ago_number = null
+            var ago_units = null
+
+            /**
+             * Set default time ago to 1 hour
+             */
+            setAgoUnits('hour')
+            setAgoUnitsNumber(1)
+
+            /**
+             * Display domain and key name
+             */
+            $('#api_domain').html(api_domain)
+            $('#api_key_name').html(api_key_name)
+
+            /**
+             * Hide stats and logs page
+             */
+            hide_tabs()
+            clear_details()
+
+            /**
+             * Handle request_id on the query string
+             */
+            request_query_id = getRequestIdQuery()
+            if(request_query_id != null) {
+                display_logs_details(request_query_id)
+            }
+
+            /**
+             * Handles click on any time unit button
+             */
+            $('.ago_units_button').click(function() {
+                setAgoUnits($(this).attr('id'))
+            });
+
+            /**
+             * Handles click on stats tab. Loads sats.
+             */
+            $('#stats_tab').click(function() {
+                $('#stats_tab').css("background-color", "#442916")
+                $('#logs_tab').css("background-color", "#ce7136")
+                $('#logs_div').hide()
+                $('#stats_div').show()
+                clear_details()
+    	        load_stats()
+    	    })
+
+            /**
+             * Handles click on logs tab. Loads logs.
+             */
+            $('#logs_tab').click(function() {
+                $('#stats_tab').css("background-color", "#ce7136")
+                $('#logs_tab').css("background-color", "#442916")
+                $('#stats_div').hide()
+                $('#logs_div').show()
+                clear_details()
+    	        load_logs(1,10)
+    	    })
+
+            /**
+             * Resets all details divs
+             */
+            function clear_details() {
+                $('#details_stats').html('')
+                $('#details_logs_datetime').html('')
+                $('#details_logs_datetime').hide()
+                $('#details_logs_endpoint').html('')
+                $('#details_logs_status').html('')
+                $('#details_logs_status').hide()
+                $('#details_logs_request_textarea').html('')
+                $('#details_logs_request').hide()
+                $('#details_logs_response_textarea').html('')
+                $('#details_logs_response').hide()
+                $('#details_logs_stack').html('')
+                $('#details_logs_stack').hide()
+                $('#details_logs_perma_link').html('')
+                $('#details_logs_stack_title').hide()
+            }
+
+            /**
+             * Hides both tabs
+             */
+            function hide_tabs() {
+                $('#logs_div').hide();
+                $('#stats_div').hide();
+            }
+
+            /**
+             * Set the time unit number as the default used
+             * for future queries and displays in the input.
+             */
+            function setAgoUnitsNumber(number){
+                $('#ago_number').val(number)
+                ago_number = number
+            }
+
+            /**
+             * Set the time unit as the default used for
+             * future queries and updates the button displays.
+             */
+            function setAgoUnits(units) {
+                $('.ago_units_button').css("background-color", "#cebc35");
+                $('.ago_units_button').css("color", "#e9ecb1");
+                $("#"+units).css("background-color", "#8e9324")
+                $("#"+units).css("color", "white")
+                ago_units = units
+            }
+
+            /**
+             * Display an error
+             */
+            function display_error(status, message) {
+                errorDisplay = '<b>HTTP '+status+'</b>: '+message
+                $('#error_display').html(errorDisplay)
+            }
+
+            /**
+             * Clear the error display
+             */
+            function clear_error() {
+                $('#error_display').html('')
+            }
+
+            /**
+             * Request stats and display
+             */
+            function load_stats() {
+
+                ago_number = $('#ago_number').val()
+                clear_error()
+
+                $('#stats_div').html('')
+                $('#stats_div').append($('<div id="loadingmessage">loading</div>'))
+
+                var url = api_domain+'/gander/requests/stats/'+ago_number+'/'+ago_units+'/ago'
+
+                /**
+                 * Ajax call
+                 */
+                setTimeout(() => {
+                    $.ajax({
+                        beforeSend: function (xhr) {
+                            xhr.setRequestHeader ("X-Gander-Key", api_key);
+                        },
+                        CORS: true,
+                        url: url,
+                        dataType: 'json',
+                        error: err => display_error(err.status, err.responseJSON.error),
+                        success: function(response, status_text, xhr) {
+                            $('#stats_div').html('')
+                            stats = response.data
+
+                            /**
+                             * Handle no records returned
+                             */
+                            if(stats.length == 0) {
+                                display_error(200, "No records")
+                                return 0
+                            }
+
+                           /**
+                            * Table to hold the stats entries
+                            */
+                            table = `<table>
+                                         <thead>
+                                             <tr>
+                                                 <th class="endpointcol">endpoint</th>
+                                                 <th>total</th>
+                                                 <th>succes %</th>
+                                             </tr>
+                                         </thead>
+                                         <tbody id="stats_table">
+                                         </tbody>
+                                     </table>`
+                            $('#stats_div').append($(table))
+
+                            /**
+                             * Populate the stats table
+                             */
+                            Object.keys(stats).map(k => {
+                                tr = $('<tr class="entryrow" stats_index='+k+'>'+
+                                       '<td><span class="method_'+stats[k]['method']+'"><b>'+stats[k]['method'] +'</b></span>'+
+                                       '<span class="endpointtext">'+stats[k]['endpoint']+'</span></td>'+
+                                       '<td style="text-align:center">'+stats[k]['total']+'</td>'+
+                                       '<td style="text-align:center">'+stats[k]['successes_percent']+'</td>'+
+                                       '</tr>')
+                                 tr.click(display_stats_details);
+
+                                 $('#stats_table').append(tr)
+                            })
+                            $('#stats_div').show()
+                        }
+                    })
+                }, 500)
+            }
+
+            /**
+             * Request logs and display
+             *
+             * @param Int page_num
+             * @param Int page_size
+             */
+            function load_logs(page_num, page_size) {
+
+                ago_number = $('#ago_number').val()
+                clear_error()
+
+                /**
+                 * Show loading message
+                 */
+                $('#logs_div').html('')
+                $('#logs_div').append($('<div id="loadingmessage">loading</div>'))
+
+                var url = api_domain+'/gander/requests/logs/'+ago_number+'/'+ago_units+'/ago?page='+page_num+'&size='+page_size
+
+                /**
+                 * Ajax call
+                 */
+                setTimeout(() => {
+                    $.ajax({
+                        beforeSend: function (xhr) {
+                            xhr.setRequestHeader ("X-Gander-Key", api_key);
+                        },
+                        CORS: true,
+                        url: url,
+                        dataType: 'json',
+                        error: err => display_error(err.status, err.responseJSON.error),
+                        success: function(response, status_text, xhr) {
+                            $('#logs_div').html('')
+                            logs = response.data
+
+                            /**
+                             * Handle no records returned
+                             */
+                            if(logs.length == 0) {
+                                display_error(200, "No records")
+                                return 0
+                            }
+
+                           /**
+                            * Table to hold the page of log entries
+                            */
+                            table = `<table border=1>
+                                         <thead>
+                                             <tr>
+                                                 <th class="endpointcol">endpoint</th>
+                                                 <th align="center">response</th>
+                                                 <th>elapsed</th>
+                                                 <th>user id</th>
+                                                 <th>ip address</th>
+                                                 <th>time</th>
+                                             </tr>
+                                         </thead>
+                                         <tbody id="logs_table">
+                                         </tbody>
+                                     </table>`
+                            $('#logs_div').append($(table))
+
+                           /**
+                            * Populate table of log entries
+                            */
+                            Object.keys(logs).map(k => {
+                                user_id = logs[k]['user_id'] === null ? '-' : logs[k]['user_id']
+                                user_ip = logs[k]['user_ip'] === null ? '-' : logs[k]['user_ip']
+                                request_id = logs[k]['request_id']
+                                tr = $('<tr class="entryrow" request_id="'+request_id+'" logs_index='+k+'>'+
+                                       '<td><span class="method_'+logs[k]['method']+'"><b>'+logs[k]['method'] +'</b></span>'+
+                                       '<span class="endpointtext">'+logs[k]['endpoint']+'</span></td>'+
+                                       '<td style="text-align:center">'+logs[k]['response_status']+'</td>'+
+                                       '<td style="text-align:center">'+logs[k]['elapsed_seconds']+'</td>'+
+                                       '<td style="text-align:center">'+user_id+'</td>'+
+                                       '<td style="text-align:center">'+user_ip+'</td>'+
+                                       '<td style="text-align:right">'+logs[k]['created_at']+'</td>'+
+                                       '</tr>')
+
+                                 tr.click(click_logs_details);
+                                 $('#logs_table').append(tr)
+                            })
+
+                            /**
+                             * Page navigation
+                             */
+                            current_size = response.links['current_size']
+                            current_page = response.links['current_page']
+                            last_page = response.links['last_page']
+
+                            navigation_div = $('<div id="navigation_div"><div id="leftnav"></div>'+current_page+'/'+last_page+'<div id="rightnav"></div></div>')
+                            $('#logs_div').append(navigation_div)
+
+                            right_arrow = $('<b page='+(current_page+1)+' size='+current_size+'> &rarr;</b>')
+                            right_arrow.click(navigate_page)
+
+                            left_arrow = $('<b page='+(current_page-1)+' size='+current_size+'> &larr;</b>')
+                            left_arrow.click(navigate_page)
+                            
+                            $('#rightnav').append(right_arrow)
+                            $('#leftnav').append(left_arrow)
+
+                            $('#logs_div').show()
+                        }
+                    })
+                }, 500)
+            }
+
+            /**
+             * Navigate pages on logs tab
+             */
+            function navigate_page() {
+                page = $(this).attr('page')
+                size = $(this).attr('size')
+                load_logs(page, size)
+            }
+
+            /**
+             * Extract details from the loaded stats object and display
+             * @see load_stats
+             */
+            function display_stats_details() {
+                clear_details();
+                responses = stats[$(this).attr('stats_index')]['responses']
+
+                /**
+                 * Table to hold the stats details entries
+                 */
+                stats_details_table = '<table class="statsdetails">' +
+                                      '<th align=left width=8ch>status</th>' +
+                                      '<th align=center width=5ch>total</th>' +
+                                      '</tr>'
+
+                /**
+                 * Populate the stats details
+                 */
+                i = 1
+                Object.keys(responses).map(k => {
+                    response = responses[k]
+                    i++
+                    style = i%2 == 1 ? "background-color: #DAF7A6" : null
+                    stats_details_table += '<tr style="'+style+'">'+
+                                           '<td><span class="method">'+response['response_status']+'</span></td>'+
+                                           '<td align=center>'+response['total']+'</td>'+
+                                           '</tr>'
+                })
+                stats_details_table += '</table>'
+                stats_details_table_html = $(stats_details_table)
+                $("#details_stats").append(stats_details_table_html)
+            }
+
+            /**
+             * Handle click on a log entry and call display_logs_details
+             */
+            function click_logs_details() {
+                request_id = $(this).attr('request_id')
+                display_logs_details(request_id)
+            }
+
+            /**
+             * Request log details and display
+             *
+             * @param String request_id
+             */
+            function display_logs_details(request_id) {
+                clear_details();
+                $("#details_logs_request").hide();
+
+                $('#details_logs_endpoint').append($('<div id="loadingmessage">loading</div>'))
+
+                var url = api_domain+'/gander/requests/'+request_id
+
+                /**
+                 * Ajax call
+                 */
+                setTimeout(() => {
+                    $.ajax({
+                        beforeSend: function (xhr) {
+                            xhr.setRequestHeader ("X-Gander-Key", api_key);
+                        },
+                        CORS: true,
+                        url: url,
+                        dataType: 'json',
+                        error: err => display_error(err.status, err.responseJSON.error),
+                        success: function(response, status_text, xhr) {
+                            data = response.data
+
+                            /**
+                             * Handle no records for this request id
+                             */
+                            if(data.length == 0) {
+                                display_error(404, "Unknown request id")
+                                $('#details_logs_endpoint').html('')
+                                return 0
+                            }
+
+                            $('#details_logs_endpoint').html('')
+                            endpoint = '<span class="method_'+data['method']+'_large">'+data['method']+'</span><span class="endpoint_large">'+data['url']+'</span>'
+                            $('#details_logs_endpoint').append($('<div>'+endpoint+'</div>'))
+
+                            $('#details_logs_datetime').append(data['created_at'])
+                            $('#details_logs_datetime').show()
+
+                            response_status_color = 'response_status_success'
+                            if(data['response_status'] >= 400 ){
+                                response_status_color = 'response_status_error'
+                            }
+                            status_line = '<div class="response_status_large '+response_status_color+'">'+data['response_status']+'</div><div class="response_status_text">'+data['response_status_text']+'</div>'
+                            $('#details_logs_status').append($(status_line))
+                            $('#details_logs_status').show()
+
+                            if(data['request_body_json'] != null) {
+                                request_body_json = JSON.stringify(JSON.parse(data['request_body_json']), null, 2)
+                                $('#details_logs_request_textarea').html(request_body_json)
+                                $("#details_logs_request").show();
+                            }
+
+                            if(data['response_body_json'] != null) {
+                                response_body_json = JSON.stringify(JSON.parse(data['response_body_json']), null, 2)
+                                $('#details_logs_response_textarea').html(response_body_json)
+                                $("#details_logs_response").show();
+                            }
+
+                            stack = data['stack']
+                            i = 1
+                            if(stack.length > 0) {
+                                for(item of stack) {
+                                    duration  = '-'
+                                    if(item['elapsed_seconds'] != null) {
+                                        duration  = item['elapsed_seconds']+'s'
+                                    }
+                                    i++
+                                    file_function_line = i%2 == 1 ? '<div class="stack_container">' : '<div class="stack_container grey">'
+                                    file_function_line +=  '<div class="stack_ffl">' +
+                                                                  '<span class="stack_ffl_file">'+item['file']+'</span>' +
+                                                                  '<span class="stack_ffl_function">'+item['function']+'()</span>' +
+                                                                  '<span class="stack_ffl_line">line '+item['line']+'</span>' +
+                                                              '</div>' +
+                                                              '<div class="stack_message">' +
+                                                                  '<div class="stack_message_message">'+item['message']+'</div>' +
+                                                                  '<div class="stack_message_duration"><b>duration:</b> '+duration+'</span>' +
+                                                              '</div>' +
+                                                          '</div>'
+                                    $('#details_logs_stack').append($(file_function_line))
+                                }
+                                $('#details_logs_stack_title').show()
+                                $('#details_logs_stack').show()
+                            }
+
+                            permalinkHref = window.location.href+'?request_id='+request_id
+                                    permalink = $('<a class="permalinkbutton" href="'+permalinkHref+'">permalink</a><br><textarea class="permalink_textarea">'+permalinkHref+'</textarea>')
+                            $('#details_logs_perma_link').append(permalink)
+
+
+                        }
+                    })
+                }, 500)
+            } // display_logs_details
+
+            /**
+             * Extract and return request_id from query string if exists
+             *
+             * @return String
+             */
+            function getRequestIdQuery() {
+                request_id_kv = window.location.href.slice(window.location.href.indexOf('?') + 1).split('&').filter(element => element.substring(0, "request_id=".length) == 'request_id=');
+                return request_id_kv.length > 0 ? request_id_kv[0].split('=')[1] : null
+            }
+
+        }); // document ready
+    </script>
+
+    <style>
+
+        body {
+            margin: 0;
+            padding: 0;
+        }
+
+        #error_display {
+            height: 2em;
+            font: 14px/1.4 "Helvetica Neue", Helvetica, Arial, sans-serif;
+            color: maroon;
+        }
+
+        .centering_placement {
+            display: flex;
+            align: center;
+            width: 270mm;
+        }
+
+        .centering_container {
+            display: flex;
+            margin: 0 auto;
+        }
+
+        .bottom_pad {
+            margin-bottom: 40px;
+        }
+
+        table {
+            width:270mm;
+            border: 1px solid white;
+            border-spacing: 0;
+            font: 14px/1.4 "Helvetica Neue", Helvetica, Arial, sans-serif;
+            color: #4a4a4d;
+        }
+
+        table.statsdetails {
+            width:13ch;
+            border: 1px solid white;
+            border-spacing: 0;
+            font: 14px/1.4 "Helvetica Neue", Helvetica, Arial, sans-serif;
+            color: #4a4a4d;
+        }
+
+        th, td {
+            padding: 10px 15px;
+            vertical-align: middle;
+            border: 1px;
+            cursor: pointer;
+        }
+
+        th {
+            color: #442916;
+            font-weight: bold;
+            font-size: 130%;
+        }
+
+        .entryrow:hover {
+            background-color:  #DAF7A6;
+        }
+
+        .endpointcol {
+            overflow: hidden;
+            white-space: nowrap;
+            text-align: left;
+        }
+
+        .method_GET {
+            display: inline-block;
+            width: 7ch;
+            word-break: break-word;
+            font-family: monospace;
+            color: #8e9324;
+        }
+
+        .method_POST {
+            display: inline-block;
+            width: 7ch;
+            word-break: break-word;
+            font-family: monospace;
+            color: #612493;
+        }
+
+        .method_PUT {
+            display: inline-block;
+            width: 7ch;
+            word-break: break-word;
+            font-family: monospace;
+            color: #4798b3;
+        }
+
+        .method_PATCH {
+            display: inline-block;
+            width: 7ch;
+            word-break: break-word;
+            font-family: monospace;
+            color: #97c6d5;
+        }
+
+        .method_DELETE {
+            display: inline-block;
+            width: 7ch;
+            word-break: break-word;
+            font-family: monospace;
+            color: #ce7136;
+        }
+
+        .method_GET_large {
+            display: inline-block;
+            width: 7ch;
+            word-break: break-word;
+            font: 20px/1.4 monospace;
+            font-weight: bold;
+            color: #8e9324;
+        }
+
+        .method_POST_large {
+            display: inline-block;
+            width: 7ch;
+            word-break: break-word;
+            font: 20px/1.4 monospace;
+            font-weight: bold;
+            color: #612493;
+        }
+
+        .method_PUT_large {
+            display: inline-block;
+            width: 7ch;
+            word-break: break-word;
+            font: 20px/1.4 monospace;
+            font-weight: bold;
+            color: #4798b3;
+        }
+
+        .method_PATCH_large {
+            display: inline-block;
+            width: 7ch;
+            word-break: break-word;
+            font: 20px/1.4 monospace;
+            font-weight: bold;
+            color: #97c6d5;
+        }
+
+        .method_DELETE_large {
+            display: inline-block;
+            width: 7ch;
+            word-break: break-word;
+            font: 20px/1.4 monospace;
+            font-weight: bold;
+            color: #ce7136;
+        }
+
+        .endpoint_large {
+            font: 18px/1.4 monospace;
+        }
+
+        .response_status_large {
+            margin-top: 10px;
+            font: 32px/1.4 "Helvetica Neue", Helvetica, Arial, sans-serif;
+            font-weight: bold;
+        }
+
+        .response_status_error {
+            color: #ce7136;
+        }
+
+        .response_status_success {
+            color: #8e9324;
+        }
+
+        .response_status_text {
+            font: 12px/1.4 "Helvetica Neue", Helvetica, Arial, sans-serif;
+        }
+
+        .endpointtext {
+            display: inline-block;
+            word-break: break-word;
+            font-family: monospace;
+        }
+
+        .tab_button {
+            cursor: pointer;
+            margin: 10px;
+            height: 50px;
+            width: 140px;
+            line-height: 50px;
+            background-color: #ce7136;
+            border-radius: 6px;
+            font: 24px "Helvetica Neue", Helvetica, Arial, sans-serif;
+            font-weight: bold;
+            color: #eed0b9;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .tab_button:hover {
+            color: white;
+        }
+
+        #navigation_div {
+            font: 14px "Helvetica Neue", Helvetica, Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding-top: 5px;
+        }
+
+        #rightnav {
+            font: 24px "Helvetica Neue", Helvetica, Arial, sans-serif;
+            font-weight: bolder;
+            cursor: pointer;
+            margin-left: 5px;
+        }
+        #leftnav {
+            font: 24px "Helvetica Neue", Helvetica, Arial, sans-serif;
+            font-weight: bolder;
+            cursor: pointer;
+            margin-right: 5px;
+        }
+
+        #ago_number {
+            border-radius: 6px;
+            margin: 10px;
+            height: 30px;
+            width: 2ch;
+            color: #8e9324;
+            font-weight: bold;
+            text-align: center;
+            font: 32px "Helvetica Neue", Helvetica, Arial, sans-serif;
+            border:0;
+            text-align: right;
+        }
+
+        .ago_units_button {
+            border-radius: 6px;
+            margin: 10px;
+            height: 25px;
+            line-height:25px;
+            width: 80px;
+            background-color: #cebc35;
+            font-weight: bold;
+            text-align: center;
+            font: 18px "Helvetica Neue", Helvetica, Arial, sans-serif;
+            display: flex;
+            color: #e9ecb1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+        }
+        .ago_units_button:hover {
+            color:white;
+        }
+
+        .ago {
+            width: 80px;
+            height: 25px;
+            line-height:25px;
+            margin: 10px;
+            font: 32px "Helvetica Neue", Helvetica, Arial, sans-serif;
+            text-align: center;
+            color: #8e9324;
+            align-items: center;
+            display: flex;
+            justify-content: left;
+        }
+
+        .topbar {
+            width:100%;
+            height: 80px;
+            margin-top: 0px;
+            background-image: url("https://gander.fruitbat.studio/images/tile.png");
+        }
+        
+        .titlebar {
+            width:100%;
+            height: 70px;
+            line-height: 40px;
+            position:relative;
+            top:-20px;
+            color: #442916;
+            display: flex;
+        }
+
+        #gander {
+            font: 72px "Helvetica Neue", Helvetica, Arial, sans-serif;
+            font-weight: bolder;
+            font-style: italic;
+            margin-left: 40px;
+            margin-right: auto;
+        }
+
+        #serverid {
+            font: 18px "Helvetica Neue", Helvetica, Arial, sans-serif;
+            margin-left: auto;
+            margin-right: 60px;
+            margin-top: 30px;
+        }
+
+        #loadingmessage {
+            font: 18px "Helvetica Neue", Helvetica, Arial, sans-serif;
+            margin-top: 30px;
+        }
+
+        #details_logs {
+            width: 220mm;
+            margin-top: 20px;
+        }
+
+        #details_logs_datetime {
+            font: 12px "Helvetica Neue", Helvetica, Arial, sans-serif;
+            text-align: right;
+        }
+
+        #details_logs_request {
+            margin-top: 10px;
+            margin-bottom: 10px;
+        }
+
+        #details_logs_response {
+            margin-bottom: 20px;
+        }
+
+        #details_logs_stack {
+            margin-bottom: 20px;
+        }
+
+        .json_body_header {
+            font: 18px "Helvetica Neue", Helvetica, Arial, sans-serif;
+            font-weight:bold;
+        }
+
+        .json_body_textarea {
+            font: 14px monospace;
+            width: 350px;
+            height: 80px;
+            overflow-y: scroll;
+            overflow: scroll;
+        }
+
+        .permalink_textarea {
+            font: 14px monospace;
+            width: 350px;
+            overflow-y: scroll;
+            overflow: scroll;
+        }
+
+        .stack_ffl {
+            margin-top: 15px;
+            width: 100%;
+            display: flex;
+        }
+
+        .stack_ffl_file {
+            font: 14px monospace;
+            text-align: left;
+            width: 70%;
+        }
+
+        .stack_ffl_function {
+            font: 14px monospace;
+            text-align: right;
+            width: 20%;
+        }
+
+        .stack_ffl_line {
+            font: 14px monospace;
+            text-align: right;
+            width: 10%;
+        }
+
+        .stack_container {
+            padding: 5px;
+            margin: 0px;
+        }
+
+        .stack_container.grey {
+            background-color: #f1f1ef;
+        }
+
+        .stack_message {
+            width: 100%;
+            height: 2ch;
+            display: flex;
+            margin-bottom: 20px;
+        }
+
+        .stack_message_duration {
+            font: 16px "Helvetica Neue", Helvetica, Arial, sans-serif;
+            text-align: right;
+            width: 30%;
+        }
+
+        .stack_message_message {
+            font: 16px "Helvetica Neue", Helvetica, Arial, sans-serif;
+            text-align: left;
+            width: 70%;
+        }
+
+        #details_stats {
+            margin-top: 40px;
+        }
+
+        #details_logs_perma_link {
+            margin-top: 20px;
+        }
+
+        .permalinkbutton {
+            cursor: pointer;
+            margin: 10px;
+            height: 30px;
+            width: 110px;
+            line-height: 30px;
+            background-color: #442916;
+            border-radius: 6px;
+            font: 18px "Helvetica Neue", Helvetica, Arial, sans-serif;
+            font-weight: bold;
+            text-decoration: none;
+            color: #eed0b9;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .permalinkbutton:hover {
+            background-color: #ce7136;
+        }
+
+        hr {
+            width: 50%;
+        }
+
+        #footer {
+            width: 100%;
+            margin-top: 70px;
+            margin-bottom: 60px;
+            text-align: center;
+        }
+        center {
+            height: 85%;
+            min-height: 75vh;
+        }
+
+        .footer_text {
+            font: 12px "Helvetica Neue", Helvetica, Arial, sans-serif;
+            text-decoration: none;
+            color: #442916;
+        }
+
+    </style>
+</head>
+
+<body>
+    <!--
+    Top tiled graphic bar
+    -->
+    <div class="topbar"></div>
+
+    <!--
+    Bar with title and server/key display
+    -->
+    <div class="titlebar">
+        <div id="gander">
+        GANDER
+        </div>
+        <div id="serverid">
+            <b>server:</b> <span id="api_domain"></span>
+            <br>
+            <b>key name:</b> <span id="api_key_name"></span>
+        </div>
+    </div>
+
+    <center>
+
+        <!--
+        Error display
+        -->
+        <div id="error_display"></div>
+
+        <!--
+        Ago selecter
+        -->
+        <div class="centering_placement bottom_pad">
+            <div class="centering_container">
+                <input type=text id=ago_number size=2>
+                <div class="ago_units_button" id="minute">minutes</div>
+                <div class="ago_units_button" id="hour">hours</div>
+                <div class="ago_units_button" id="day">days</div>
+                <div class="ago_units_button" id="week">weeks</div>
+                <div class="ago_units_button" id="month">months</div>
+                <div class="ago">ago</div>
+            </div>
+        </div>
+
+        <!--
+        Tab buttons for stats and logs
+        -->
+        <div class="centering_placement">
+            <div class="centering_container">
+                <div id="stats_tab" class="tab_button">stats</div>
+                <div id="logs_tab" class="tab_button">logs</div>
+            </div>
+        </div>
+
+        <!--
+        Stats tab
+        -->
+        <div id="stats_div" class="stats_div"></div>
+
+        <!--
+        Logs tab
+        -->
+        <div id="logs_div" class="logs_div"></div>
+
+        <!--
+        Details from click on stats entry
+        -->
+        <div id='details_stats'></div>
+
+        <!--
+        Details from click on logs entry
+        -->
+        <div id='details_logs'>
+            <div id="details_logs_datetime"></div>
+            <div id="details_logs_endpoint"></div>
+            <div id="details_logs_status"></div>
+            <div id="details_logs_request">
+                <div class="json_body_header">request</div>
+                <textarea id="details_logs_request_textarea" class="json_body_textarea"></textarea>
+            </div>
+            <div id="details_logs_response">
+                <div class="json_body_header">response</div>
+                <textarea id="details_logs_response_textarea" class="json_body_textarea"></textarea>
+            </div>
+            <div id="details_logs_stack_title" class="json_body_header">stack</div>
+            <div id="details_logs_stack"></div>
+            <div id="details_logs_perma_link"></div>
+        </div>
+
+    </center>
+
+    <!--
+    Footer
+    -->
+    <div id="footer">
+        <hr>
+        <a href="https://fruitbat.studio" class="footer_text">fruitbat.studio</a>
+    </div>
+
+</body>
+</html>

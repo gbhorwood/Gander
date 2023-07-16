@@ -1,0 +1,14 @@
+{
+  "name": "swagger",
+  "version": "1.0.0",
+  "description": "build a doc",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@openapitools/openapi-generator-cli": "^2.3.3"
+  }
+}
