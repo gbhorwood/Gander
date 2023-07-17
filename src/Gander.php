@@ -96,7 +96,7 @@ class Gander
             'response_status' => $response->status(),
             'response_status_text' => $response->statusText(),
             'url' => substr(str_replace($request->root(), '', $request->fullUrl()), -254),
-            'request_body_json' => $request->isJson() ? $request->getContent() : null,
+            'request_body_json' => $request->isJson() ? $this->scrubPasswords($request->getContent()) : null,
             'response_body_json' => $responseBodyJson,
             'user_id' => $userId,
             'user_ip' => $request->ip(),
@@ -189,5 +189,40 @@ class Gander
     public static function randUniqueId():String
     {
         return bin2hex(random_bytes(7));
+    }
+
+    /**
+     * Traverses the json body and replaces all values keyed with one of
+     * the values listed in .env value GANDER_PASSWORD_KEYS with asteriskes.
+     * This is used to sanitize input since we don't want to write user
+     * passwords to the db.
+     *
+     * @param  String $json The json body
+     * @return String The new json body with password scrubbed
+     */
+    private function scrubPasswords(String $json):String
+    {
+        /**
+         * Get the keys that contain passwords from the config
+         */
+        $passwordKeys = array_map(fn($p) => trim($p), explode(',', config('gander.password_keys')));
+
+        /**
+         * Recursive function to scrub password values at any depth
+         */
+        $r = function($j) use(&$r, $passwordKeys){
+            $f = function($k, $v) use($passwordKeys){
+                return in_array($k, $passwordKeys) ? "*******" : $v;
+            };
+            foreach($j as $k => $v) {
+                $j[$k] = is_scalar($v) ? $f($k, $j[$k]) : $r($j[$k]);
+            }
+            return $j;
+        };
+
+        /**
+         * Return json body as string with password values scrubbed
+         */
+        return json_encode($r(json_decode($json, true))); 
     }
 }

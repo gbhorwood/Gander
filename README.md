@@ -30,11 +30,14 @@ All Gander features are turned on by default after installation. To adjust this,
 ```
 GANDER_ENABLE=true
 GANDER_ENABLE_STACK_TIMERS=true
+GANDER_PASSWORD_KEYS=password,repeat_password,password_repeat,again_password,password_again
 ```
 
 Setting `GANDER_ENABLE` to `false` will turn off Gander completely.
 
 Setting `GANDER_ENABLE_STACK_TIMERS` to false will disable the elapsed time value on all log writes you have added to your code using `Gander::track()`.
+
+Gander attempts to sanitize password data from request bodies by removing a values if its key matches one of the keys listed in `GANDER_PASSWORD_KEYS`. If you accept password data keyed with something not in the `GANDER_PASSWORD_KEYS` list, add it.
 
 ### A short note on timer configuration
 Timing of the elapsed seconds of a request is done internally using php's [`hrtime()`](https://www.php.net/manual/en/function.hrtime.php) for performance reasons. However, `hrtime()` is unreliable when called across function calls. For this reason, calculating the elapsed time when writing log calls is done using [`microtime()`](https://www.php.net/manual/en/function.microtime.php). However, `microtime()` may be slow in some virtual environments who's [vDSO](https://man7.org/linux/man-pages/man7/vdso.7.html) does not allow access to the clock. For this reason, Gander allows you to turn off the use of `microtime()` by setting `GANDER_ENABLE_STACK_TIMERS` to `false`.
