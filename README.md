@@ -2,7 +2,7 @@
 [![License](http://poser.pugx.org/gbhorwood/gander/license)](https://packagist.org/packages/gbhorwood/gander)
 [![License](http://poser.pugx.org/gbhorwood/gander/require/php)](https://packagist.org/packages/gbhorwood/gander)
 
-Gander is an inspector and logger for restful Laravel apis. Gander allows logging of request/responses, as well as optional logging of events in your source code. Gander reports are viewed with javascript client which is exported and can be hosted anywhere.
+Gander is an inspector and logger for restful Laravel apis. Gander allows logging of request/responses, as well as optional logging of events in your source code. Gander reports are viewed with an exported javascript client which can be hosted anywhere.
 
 ## Install
 Gander is installed via composer:
@@ -40,7 +40,7 @@ Setting `GANDER_ENABLE_STACK_TIMERS` to false will disable the elapsed time valu
 Gander attempts to sanitize password data from request bodies by removing a value if its key matches one of the keys listed in `GANDER_PASSWORD_KEYS`. If you accept password data keyed with something not in the `GANDER_PASSWORD_KEYS` list, add it.
 
 ### A short note on timer configuration
-Timing of the elapsed seconds of a request is done internally using php's [`hrtime()`](https://www.php.net/manual/en/function.hrtime.php) for performance reasons. However, `hrtime()` is unreliable when called across function calls. For this reason, calculating the elapsed time when writing log calls is done using [`microtime()`](https://www.php.net/manual/en/function.microtime.php). However, `microtime()` may be slow in some virtual environments who's [vDSO](https://man7.org/linux/man-pages/man7/vdso.7.html) does not allow access to the clock. For this reason, Gander allows you to turn off the use of `microtime()` by setting `GANDER_ENABLE_STACK_TIMERS` to `false`.
+Timing of the elapsed seconds of a request is done internally using php's [`hrtime()`](https://www.php.net/manual/en/function.hrtime.php) for performance reasons. However, `hrtime()` is unreliable when called across function calls. For this reason, calculating the elapsed time when writing log calls made by `Gander::track()` is done using [`microtime()`](https://www.php.net/manual/en/function.microtime.php). However, `microtime()` may be slow in some virtual environments who's [vDSO](https://man7.org/linux/man-pages/man7/vdso.7.html) does not allow access to the clock. For this reason, Gander allows you to turn off the use of `microtime()` by setting `GANDER_ENABLE_STACK_TIMERS` to `false`.
 
 ## Writing logs
 Gander logs requests and responses automatically. In addition, you can also add log writes for a given request in your endpoint's source code with:
@@ -79,7 +79,7 @@ class MyController extends BaseController
 }
 ```
 
-Here, the call to `Gander::track()` in both `getNumber()` and `generateNumber()` is logged.
+Here, the call to `Gander::track()` in both `getNumber()` and `generateNumber()` is logged. The client will display them in the order they were written.
 
 If `GANDER_ENABLE_STACK_TIMERS` is set to `true`, each call to `Gander::track()` will log the elapsed time, in seconds, since the last call to `track`.
 
@@ -96,9 +96,7 @@ The client file will be saved in your api's root directory and will be named usi
 gander_<domain of api>_<name of access key>.html
 ```
 
-This client will work only for the api in which it was generated. 
-
-The client file can be hosted anywhere that has network access to your api. This includes opening it as a file in your browser.
+This client will work only for the api in which it was generated and can be hosted anywhere that has network access to your api.
 
 The client file will access your api using a unique access key. If you wish to revoke access to a client, you can do so by removing its api key (see 'Managing client keys').
 
@@ -109,6 +107,12 @@ php artisan gbhorwood:gander --create-client --outfile=/path/to/my/file
 ```
 
 Gander will not overwrite client files that already exist.
+
+If you want to specify the name of your access key, you can use the `--key-name=` option:
+
+```shell
+php artisan gbhorwood:gander --create-client --key-name=myKey
+```
 
 ## Using the client
 A Gander client can be hosted on any http server or opened in a web browser as a file.
@@ -127,7 +131,7 @@ The Stats tab will show all of the routes called during the time period, along w
 
 ![Gander stats page](https://gander.fruitbat.studio/images/readme_stats_page.png)
 
-Note that the number of time units is an editable input box and the units are buttons.
+Note that the number of time units is an editable input box.
 
 The domain of the api being reported on and the name of the api key are shown in the top-right corner.
 
@@ -171,6 +175,4 @@ php artisan gbhorwood:gander --create-client --key-name=<custom key name>
 ```
 
 ## Writing your own client
-Gander's primary functionality is storing data about requests and providing an api to report on that data; the client is a convenience tool.
-
 If you wish to create your own client, OpenApi documentation on the Gander api is located in the `swagger/` directory of the package.
