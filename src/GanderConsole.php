@@ -57,7 +57,7 @@ class GanderConsole extends Command
             return $this->deleteKey();
         }
 
-        $this->line("Pass one of --createClient --list-keys or --delete-key");
+        $this->line("Pass one of --create-client --list-keys or --delete-key");
 
         /**
          * Return zero for success

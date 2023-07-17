@@ -24,4 +24,13 @@ return [
     */
     'stack_timers_enabled' => env('GANDER_ENABLE_STACK_TIMERS', true),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Protect passwords in json
+    |--------------------------------------------------------------------------
+    | Comma-separated list of keys in json request bodies that contain user 
+    | passwords
+    |
+    */
+    'password_keys' => env('GANDER_PASSWORD_KEYS', "password,repeat_password,password_repeat,again_password,password_again"),
 ];
