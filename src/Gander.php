@@ -198,14 +198,24 @@ class Gander
      * passwords to the db.
      *
      * @param  String $json The json body
-     * @return String The new json body with password scrubbed
+     * @return ?String The new json body with password scrubbed
      */
-    private function scrubPasswords(String $json):String
+    private function scrubPasswords(String $json):?String
     {
         /**
          * Get the keys that contain passwords from the config
          */
         $passwordKeys = array_map(fn($p) => trim($p), explode(',', config('gander.password_keys')));
+
+        /**
+         * Function to validate if json or not
+         */
+        $v = function ($json) {
+            if (!empty($json)) {
+                return is_string($json) && is_array(json_decode($json, true)) ? true : false;
+            }
+            return false;
+        };
 
         /**
          * Recursive function to scrub password values at any depth
@@ -223,6 +233,6 @@ class Gander
         /**
          * Return json body as string with password values scrubbed
          */
-        return json_encode($r(json_decode($json, true))); 
+        return $v($json) ? json_encode($r(json_decode($json, true))) : null;
     }
 }
