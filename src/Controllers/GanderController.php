@@ -159,9 +159,39 @@ class GanderController extends BaseController
         /**
          * Select page
          */
-		$requestsPage = GanderRequestDigest::where('created_at', '>', $startDate)
-            ->orderBy('created_at', 'desc')
-			->paginate($size);
+        $requestsPage = GanderRequestDigest::where('created_at', '>', $startDate);
+
+        /**
+         * Filter on status code range optionally
+         */
+        if(isset($request->status)) {
+            switch($request->status) {
+                case "2xx":
+                    $requestsPage->whereBetween('response_status', [200, 299]);
+                    break;
+                case "3xx":
+                    $requestsPage->whereBetween('response_status', [300, 399]);
+                    break;
+                case "4xx":
+                    $requestsPage->whereBetween('response_status', [400, 499]);
+                    break;
+                case "5xx":
+                    $requestsPage->whereBetween('response_status', [500, 599]);
+                    break;
+            }
+        }
+
+        /**
+         * Filter on endpoint optionally
+         */
+        if(isset($request->endpoint)) {
+            $requestsPage->where('endpoint', '=', $request->endpoint);
+        }
+
+        /**
+         * Order by
+         */
+        $requestsPage = $requestsPage->orderBy('created_at', 'desc')->paginate($size);
 
         /**
          * Reformat

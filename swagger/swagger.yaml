@@ -112,6 +112,13 @@ paths:
             minimum: 1
             default: 10
           example: 5
+      requestBody:
+        required: false
+        description:
+        content: 
+          application/json:
+            schema:
+              $ref: '#/components/schemas/logs_request'
       responses:
         200:
           description: OK
@@ -405,6 +412,21 @@ components:
     #-----------------------------------------------------
     # request schemas
 
+    ###
+    # response: logs_request
+    logs_request:
+      type: object
+      properties:
+        status:
+          type: string
+          description: The status range to filter on. One of `2xx`, `3xx`, `4xx` or `5xx`
+          nullable: true
+          example: 2xx
+        endpoint:
+          type: string
+          description: The endpoint to filter on
+          nullable: true
+          example: api/session/login
 
     #-----------------------------------------------------
     # pagination schemas
