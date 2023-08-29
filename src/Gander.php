@@ -225,7 +225,7 @@ class Gander
                 return in_array($k, $passwordKeys) ? "*******" : $v;
             };
             foreach($j as $k => $v) {
-                $j[$k] = is_scalar($v) ? $f($k, $j[$k]) : $r($j[$k]);
+                $j[$k] = is_scalar($v) || is_null($v) ? $f($k, $j[$k]) : $r($j[$k]);
             }
             return $j;
         };

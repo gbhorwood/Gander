@@ -30,6 +30,9 @@
             var ago_number = null
             var ago_units = null
 
+            var status_filter = 'all'
+            var endpoint_filter = 'all'
+
             /**
              * Set default time ago to 1 hour
              */
@@ -242,6 +245,13 @@
                 $('#logs_div').append($('<div id="loadingmessage">loading</div>'))
 
                 var url = api_domain+'/gander/requests/logs/'+ago_number+'/'+ago_units+'/ago?page='+page_num+'&size='+page_size
+                if(status_filter != 'all') {
+                    url += '&status='+status_filter
+                }
+
+                if(endpoint_filter != 'all') {
+                    url += '&endpoint='+endpoint_filter
+                }
 
                 /**
                  * Ajax call
@@ -264,6 +274,7 @@
                              */
                             if(logs.length == 0) {
                                 display_error(200, "No records")
+                                display_filters()
                                 return 0
                             }
 
@@ -274,11 +285,12 @@
                                          <thead>
                                              <tr>
                                                  <th class="endpointcol">endpoint</th>
-                                                 <th align="center">response</th>
+                                                 <th align="center">status</th>
                                                  <th>elapsed</th>
-                                                 <th>user id</th>
-                                                 <th>ip address</th>
-                                                 <th>time</th>
+                                                 <th>user</th>
+                                                 <th>ip</th>
+                                                 <th align="center">time</th>
+                                                 <th align="center"></th>
                                              </tr>
                                          </thead>
                                          <tbody id="logs_table">
@@ -300,11 +312,17 @@
                                        '<td style="text-align:center">'+logs[k]['elapsed_seconds']+'</td>'+
                                        '<td style="text-align:center">'+user_id+'</td>'+
                                        '<td style="text-align:center">'+user_ip+'</td>'+
-                                       '<td style="text-align:right">'+logs[k]['created_at']+'</td>'+
+                                       '<td style="text-align:center">'+logs[k]['created_at']+'</td>'+
+                                       '<td style="text-align:right"><div class="endpoint_filter_button" endpoint="'+logs[k]['endpoint']+'">filter</div></td>'+
                                        '</tr>')
 
                                  tr.click(click_logs_details);
                                  $('#logs_table').append(tr)
+                            })
+
+                            $('.endpoint_filter_button').click(function() {
+                                endpoint_filter = $(this).attr('endpoint')
+                                load_logs(1,10)
                             })
 
                             /**
@@ -326,6 +344,12 @@
                             $('#rightnav').append(right_arrow)
                             $('#leftnav').append(left_arrow)
 
+                            /**
+                             * Show filter options
+                             */
+                            display_filters()
+
+
                             $('#logs_div').show()
                         }
                     })
@@ -339,6 +363,33 @@
                 page = $(this).attr('page')
                 size = $(this).attr('size')
                 load_logs(page, size)
+            }
+
+
+            function display_filters() {
+                            status_choice_div = $('<div id="status_container">' +
+                                                  '<span class="status_check"><b>endpoint:</b> ' + endpoint_filter + ' <span class="endpoint_filter_remove">[x]</span></span>' +
+                                                  '<b>status:</b> ' +
+                                                  '<label class="status_check"><input type="radio" name="status" id="status_all" value="all">all</label>' +
+                                                  '<label class="status_check"><input type="radio" name="status" id="status_2xx" value="2xx">2xx</label>' +
+                                                  '<label class="status_check"><input type="radio" name="status" id="status_3xx" value="3xx">3xx</label>' +
+                                                  '<label class="status_check"><input type="radio" name="status" id="status_4xx" value="4xx">4xx</label>' +
+                                                  '<label class="status_check"><input type="radio" name="status" id="status_5xx" value="5xx">5xx</label>' +
+                                                  '</div>')
+                                    
+                            $('#logs_div').append(status_choice_div)
+                            $("#status_"+status_filter).prop("checked", true);
+                            $('#status_container input:radio').click(set_status)
+
+                            $('.endpoint_filter_remove').click(function() {
+                                endpoint_filter = 'all'
+                                load_logs(1,10)
+                            })
+            }
+
+            function set_status() {
+                status_filter = $(this).val();
+                load_logs(1,10)
             }
 
             /**
@@ -458,15 +509,31 @@
                                     i++
                                     file_function_line = i%2 == 1 ? '<div class="stack_container">' : '<div class="stack_container grey">'
                                     file_function_line +=  '<div class="stack_ffl">' +
-                                                                  '<span class="stack_ffl_file">'+item['file']+'</span>' +
-                                                                  '<span class="stack_ffl_function">'+item['function']+'()</span>' +
-                                                                  '<span class="stack_ffl_line">line '+item['line']+'</span>' +
-                                                              '</div>' +
-                                                              '<div class="stack_message">' +
-                                                                  '<div class="stack_message_message">'+item['message']+'</div>' +
-                                                                  '<div class="stack_message_duration"><b>duration:</b> '+duration+'</span>' +
-                                                              '</div>' +
-                                                          '</div>'
+                                                               '<span class="stack_ffl_file">'+item['file']+'</span>' +
+                                                               '<span class="stack_ffl_line">line '+item['line']+'</span>' +
+                                                           '</div>' +
+                                                           '<div class="stack_ffl">' +
+                                                               '<span class="stack_ffl_file">'+item['function']+'</span>' +
+                                                               '<span class="stack_ffl_line">duration: '+duration+'</span>' +
+                                                           '</div>' +
+                                                           '<div class="stack_ffl">' +
+                                                               '<span class="stack_message_message">'+item['message']+'</span>' +
+                                                           '</div>' +
+                                                           '</div>'
+                                            /*
+                                    file_function_line +=  '<div class="stack_ffl">' +
+                                                               '<span class="stack_ffl_file">'+item['file']+'</span>' +
+                                                               '<span class="stack_ffl_line">line '+item['line']+'</span>' +
+                                                           '</div>' +
+                                                           '<div class="stack_ffl">' +
+                                                               '<span class="stack_ffl_file">'+item['function']+'()</span>' +
+                                                               '<div class="stack_ffl_line">'+duration+'</span>' +
+                                                           '</div>' +
+                                                           '<div class="stack_message">' +
+                                                               '<div class="stack_message_message">'+item['message']+'</div>' +
+                                                           '</div>' +
+                                                           '</div>'
+                                    */
                                     $('#details_logs_stack').append($(file_function_line))
                                 }
                                 $('#details_logs_stack_title').show()
@@ -823,15 +890,25 @@
             margin-bottom: 20px;
         }
 
+        #status_container {
+            font: 14px "Helvetica Neue", Helvetica, Arial, sans-serif;
+        }
+
+        .status_check {
+            margin-right: 20px;
+        }
+
         .json_body_header {
+            padding-top: 15px;
             font: 18px "Helvetica Neue", Helvetica, Arial, sans-serif;
             font-weight:bold;
+            color: #442916;
         }
 
         .json_body_textarea {
             font: 14px monospace;
-            width: 350px;
-            height: 80px;
+            width: 100%;
+            height: 120px;
             overflow-y: scroll;
             overflow: scroll;
         }
@@ -844,7 +921,8 @@
         }
 
         .stack_ffl {
-            margin-top: 15px;
+            margin-top: 5px;
+            padding-top: 5px;
             width: 100%;
             display: flex;
         }
@@ -852,7 +930,15 @@
         .stack_ffl_file {
             font: 14px monospace;
             text-align: left;
-            width: 70%;
+            width: 80%;
+            color: #505050;
+        }
+
+        .stack_ffl_line {
+            font: 14px monospace;
+            text-align: right;
+            width: 20%;
+            color: #505050;
         }
 
         .stack_ffl_function {
@@ -861,14 +947,8 @@
             width: 20%;
         }
 
-        .stack_ffl_line {
-            font: 14px monospace;
-            text-align: right;
-            width: 10%;
-        }
-
         .stack_container {
-            padding: 5px;
+            padding: 10px;
             margin: 0px;
         }
 
@@ -881,6 +961,7 @@
             height: 2ch;
             display: flex;
             margin-bottom: 20px;
+            margin-top: 5px;
         }
 
         .stack_message_duration {
@@ -890,9 +971,10 @@
         }
 
         .stack_message_message {
+            margin-top: 5px;
             font: 16px "Helvetica Neue", Helvetica, Arial, sans-serif;
             text-align: left;
-            width: 70%;
+            width: 100%;
         }
 
         #details_stats {
