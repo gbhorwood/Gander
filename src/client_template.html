@@ -9,10 +9,14 @@
 
             /**
              * Configuration values
-             */
             api_domain = '!!apiDomain!!'
             api_key = '!!apiKey!!'
             api_key_name = '!!apiKeyName!!'
+             */
+                    
+             api_domain = 'https://staging-api.humanverify.io'
+             api_key = 'e04c05d94f9442bbda6f45e11dd067fb'
+             api_key_name = 'ToweringPine17s'
 
             /**
              * Returned stats data
@@ -368,7 +372,7 @@
 
             function display_filters() {
                             status_choice_div = $('<div id="status_container">' +
-                                                  '<span class="status_check"><b>endpoint:</b> ' + endpoint_filter + ' <span class="endpoint_filter_remove">[x]</span></span>' +
+                                                  '<span class="status_check"><b>endpoint:</b> ' + endpoint_filter + ' <span class="endpoint_filter_remove">clear</span></span>' +
                                                   '<b>status:</b> ' +
                                                   '<label class="status_check"><input type="radio" name="status" id="status_all" value="all">all</label>' +
                                                   '<label class="status_check"><input type="radio" name="status" id="status_2xx" value="2xx">2xx</label>' +
@@ -628,6 +632,31 @@
             overflow: hidden;
             white-space: nowrap;
             text-align: left;
+        }
+
+        .endpoint_filter_remove {
+            cursor: pointer;
+            border-radius: 3px;
+            padding: 3px 6px 3px 6px;
+            text-align: center;
+            background-color: #cebc35;
+        }
+
+        .endpoint_filter_remove:hover {
+            background-color: #8e9324;
+        }
+
+        .endpoint_filter_button {
+            cursor: pointer;
+            border-radius: 3px;
+            border: 1px solid black;
+            padding: 3px 6px 3px 6px;
+            text-align: center;
+        }
+
+        .endpoint_filter_button:hover {
+            border: 1px solid darkgrey;
+            color: darkgrey;
         }
 
         .method_GET {
