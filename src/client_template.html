@@ -13,7 +13,7 @@
             api_domain = '!!apiDomain!!'
             api_key = '!!apiKey!!'
             api_key_name = '!!apiKeyName!!'
-
+                    
             /**
              * Returned stats data
              */
@@ -31,7 +31,7 @@
             var ago_units = null
 
             var status_filter = 'all'
-            var endpoint_filter = 'all'
+            var endpoint_filter = 'all endpoints'
 
             /**
              * Set default time ago to 1 hour
@@ -249,7 +249,7 @@
                     url += '&status='+status_filter
                 }
 
-                if(endpoint_filter != 'all') {
+                if(endpoint_filter != 'all endpoints') {
                     url += '&endpoint='+endpoint_filter
                 }
 
@@ -313,7 +313,7 @@
                                        '<td style="text-align:center">'+user_id+'</td>'+
                                        '<td style="text-align:center">'+user_ip+'</td>'+
                                        '<td style="text-align:center">'+logs[k]['created_at']+'</td>'+
-                                       '<td style="text-align:right"><div class="endpoint_filter_button" endpoint="'+logs[k]['endpoint']+'">filter</div></td>'+
+                                       '<td style="text-align:left" width="12ch"><div class="endpoint_filter_button" endpoint="'+logs[k]['endpoint']+'">filter</div></td>'+
                                        '</tr>')
 
                                  tr.click(click_logs_details);
@@ -368,7 +368,7 @@
 
             function display_filters() {
                             status_choice_div = $('<div id="status_container">' +
-                                                  '<span class="status_check"><b>endpoint:</b> ' + endpoint_filter + ' <span class="endpoint_filter_remove">clear</span></span>' +
+                                        '<span class="status_check"><b>endpoint:</b> <span class="endpoint_filter_display">' + endpoint_filter + '</span> <span class="endpoint_filter_remove">clear</span></span>' +
                                                   '<b>status:</b> ' +
                                                   '<label class="status_check"><input type="radio" name="status" id="status_all" value="all">all</label>' +
                                                   '<label class="status_check"><input type="radio" name="status" id="status_2xx" value="2xx">2xx</label>' +
@@ -382,7 +382,7 @@
                             $('#status_container input:radio').click(set_status)
 
                             $('.endpoint_filter_remove').click(function() {
-                                endpoint_filter = 'all'
+                                endpoint_filter = 'all endpoints'
                                 load_logs(1,10)
                             })
             }
@@ -592,7 +592,8 @@
         }
 
         table {
-            width:270mm;
+            /*width:270mm;*/
+            width: 70%;
             border: 1px solid white;
             border-spacing: 0;
             font: 14px/1.4 "Helvetica Neue", Helvetica, Arial, sans-serif;
@@ -614,6 +615,7 @@
             cursor: pointer;
         }
 
+
         th {
             color: #442916;
             font-weight: bold;
@@ -630,16 +632,22 @@
             text-align: left;
         }
 
+        .endpoint_filter_display {
+            border: 1px solid grey;
+            padding: 4px 8px 2px 4px;
+            text-align: left;
+        }
+
         .endpoint_filter_remove {
             cursor: pointer;
             border-radius: 3px;
-            padding: 3px 6px 3px 6px;
+            border: 1px solid black;
+            padding: 4px 4px 2px 4px;
             text-align: center;
-            background-color: #cebc35;
         }
 
         .endpoint_filter_remove:hover {
-            background-color: #8e9324;
+            border: 1px solid grey;
         }
 
         .endpoint_filter_button {
@@ -648,6 +656,7 @@
             border: 1px solid black;
             padding: 3px 6px 3px 6px;
             text-align: center;
+            width: 7ch;
         }
 
         .endpoint_filter_button:hover {
@@ -825,6 +834,7 @@
             border-radius: 6px;
             margin: 10px;
             height: 25px;
+            padding-top: 2px;
             line-height:25px;
             width: 80px;
             background-color: #cebc35;
@@ -940,7 +950,9 @@
 
         .permalink_textarea {
             font: 14px monospace;
-            width: 350px;
+            /*width: 350px;*/
+            width: 100%;
+            height: 2ch;
             overflow-y: scroll;
             overflow: scroll;
         }
