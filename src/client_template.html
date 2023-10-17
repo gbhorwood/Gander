@@ -9,11 +9,11 @@
 
             /**
              * Configuration values
-             */
+            */
             api_domain = '!!apiDomain!!'
             api_key = '!!apiKey!!'
             api_key_name = '!!apiKeyName!!'
-                    
+
             /**
              * Returned stats data
              */
@@ -32,6 +32,7 @@
 
             var status_filter = 'all'
             var endpoint_filter = 'all endpoints'
+            var user_ip_filter = 'all ips'
 
             /**
              * Set default time ago to 1 hour
@@ -253,6 +254,10 @@
                     url += '&endpoint='+endpoint_filter
                 }
 
+                if(user_ip_filter != 'all ips') {
+                    url += '&user_ip='+user_ip_filter
+                }
+
                 /**
                  * Ajax call
                  */
@@ -290,7 +295,6 @@
                                                  <th>user</th>
                                                  <th>ip</th>
                                                  <th align="center">time</th>
-                                                 <th align="center"></th>
                                              </tr>
                                          </thead>
                                          <tbody id="logs_table">
@@ -307,21 +311,31 @@
                                 request_id = logs[k]['request_id']
                                 tr = $('<tr class="entryrow" request_id="'+request_id+'" logs_index='+k+'>'+
                                        '<td><span class="method_'+logs[k]['method']+'"><b>'+logs[k]['method'] +'</b></span>'+
-                                       '<span class="endpointtext">'+logs[k]['endpoint']+'</span></td>'+
+                                       '<span class="endpointtext">'+logs[k]['endpoint']+'</span><span class="endpoint_filter_button" endpoint="'+logs[k]['endpoint']+'">filter</span></td>'+
                                        '<td style="text-align:center">'+logs[k]['response_status']+'</td>'+
                                        '<td style="text-align:center">'+logs[k]['elapsed_seconds']+'</td>'+
                                        '<td style="text-align:center">'+user_id+'</td>'+
-                                       '<td style="text-align:center">'+user_ip+'</td>'+
+                                       '<td style="text-align:center">'+user_ip+' <span class="user_ip_filter_button" user_ip="'+logs[k]['user_ip']+'">filter</span></td>'+
                                        '<td style="text-align:center">'+logs[k]['created_at']+'</td>'+
-                                       '<td style="text-align:left" width="12ch"><div class="endpoint_filter_button" endpoint="'+logs[k]['endpoint']+'">filter</div></td>'+
                                        '</tr>')
 
                                  tr.click(click_logs_details);
                                  $('#logs_table').append(tr)
                             })
 
+                            /**
+                             * Endpoint filter event
+                             */
                             $('.endpoint_filter_button').click(function() {
                                 endpoint_filter = $(this).attr('endpoint')
+                                load_logs(1,10)
+                            })
+
+                            /**
+                             * User ip filter event
+                             */
+                            $('.user_ip_filter_button').click(function() {
+                                user_ip_filter = $(this).attr('user_ip')
                                 load_logs(1,10)
                             })
 
@@ -368,7 +382,8 @@
 
             function display_filters() {
                             status_choice_div = $('<div id="status_container">' +
-                                        '<span class="status_check"><b>endpoint:</b> <span class="endpoint_filter_display">' + endpoint_filter + '</span> <span class="endpoint_filter_remove">clear</span></span>' +
+                                                  '<span class="status_check"><b>endpoint:</b> <span class="endpoint_filter_display">' + endpoint_filter + '</span> <span class="endpoint_filter_remove">clear</span></span>' +
+                                                  '<span class="status_check"><b>user ip:</b> <span class="endpoint_filter_display">' + user_ip_filter + '</span> <span class="user_ip_filter_remove">clear</span></span>' +
                                                   '<b>status:</b> ' +
                                                   '<label class="status_check"><input type="radio" name="status" id="status_all" value="all">all</label>' +
                                                   '<label class="status_check"><input type="radio" name="status" id="status_2xx" value="2xx">2xx</label>' +
@@ -383,6 +398,11 @@
 
                             $('.endpoint_filter_remove').click(function() {
                                 endpoint_filter = 'all endpoints'
+                                load_logs(1,10)
+                            })
+
+                            $('.user_ip_filter_remove').click(function() {
+                                user_ip_filter = 'all ips'
                                 load_logs(1,10)
                             })
             }
@@ -644,6 +664,7 @@
             border: 1px solid black;
             padding: 4px 4px 2px 4px;
             text-align: center;
+            color: #8E9324;
         }
 
         .endpoint_filter_remove:hover {
@@ -654,14 +675,43 @@
             cursor: pointer;
             border-radius: 3px;
             border: 1px solid black;
-            padding: 3px 6px 3px 6px;
+            padding: 3px 1px 1px 1px;
             text-align: center;
             width: 7ch;
+            float: right;
         }
 
         .endpoint_filter_button:hover {
             border: 1px solid darkgrey;
             color: darkgrey;
+        }
+
+        .user_ip_filter_button {
+            cursor: pointer;
+            border-radius: 3px;
+            border: 1px solid black;
+            padding: 3px 1px 1px 1px;
+            text-align: center;
+            width: 7ch;
+            float: right;
+        }
+
+        .user_ip_filter_button:hover {
+            border: 1px solid darkgrey;
+            color: darkgrey;
+        }
+
+        .user_ip_filter_remove {
+            cursor: pointer;
+            border-radius: 3px;
+            border: 1px solid black;
+            padding: 4px 4px 2px 4px;
+            text-align: center;
+            color: #8E9324;
+        }
+
+        .user_ip_filter_remove:hover {
+            border: 1px solid grey;
         }
 
         .method_GET {
