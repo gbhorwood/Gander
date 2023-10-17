@@ -1,4 +1,5 @@
 <?php
+
 namespace Gbhorwood\Gander;
 
 use Illuminate\Console\Command;
@@ -43,17 +44,13 @@ class GanderConsole extends Command
      *
      * @return int
      */
-    public function handle():Int
+    public function handle(): Int
     {
         if($this->option('create-client')) {
             return $this->createClient();
-        }
-
-        else if($this->option('list-keys')) {
+        } elseif($this->option('list-keys')) {
             return $this->listKeys();
-        }
-
-        else if($this->option('delete-key')) {
+        } elseif($this->option('delete-key')) {
             return $this->deleteKey();
         }
 
@@ -70,7 +67,7 @@ class GanderConsole extends Command
      *
      * @return Int
      */
-    protected function createClient():Int
+    protected function createClient(): Int
     {
         $apiDomain = trim(env('APP_URL'));
 
@@ -91,8 +88,7 @@ class GanderConsole extends Command
             $apiKey = $this->generateKey();
             $apiKeyName = $this->getKeyName();
             $keyWritten = $this->writeApiKey($apiKeyName, $apiKey);
-        }
-        while(!$keyWritten);
+        } while(!$keyWritten);
 
         /**
          * Get the name of the output file for the client
@@ -127,19 +123,19 @@ class GanderConsole extends Command
      *
      * @return Int
      */
-    protected function listKeys():Int
+    protected function listKeys(): Int
     {
         $keys = GanderApiKey::all()->toArray();
 
         /**
          * Output table of keys
          */
-        $pad = max(array_map(fn($n) => strlen($n['name']), $keys));
+        $pad = max(array_map(fn ($n) => strlen($n['name']), $keys));
         $this->info('current api keys');
         fwrite(STDOUT, str_pad('name', $pad, ' ').' | created at'.PHP_EOL);
         fwrite(STDOUT, join('', array_fill(0, $pad + 1, '-')).'+'.join('', array_fill(0, 20, '-')).PHP_EOL);
-        array_map(fn($n) => fwrite(STDOUT, str_pad($n['name'], $pad, ' ', STR_PAD_RIGHT).' | '.date('Y-m-d H:i:s', strtotime($n['created_at'])).PHP_EOL), $keys);
-        
+        array_map(fn ($n) => fwrite(STDOUT, str_pad($n['name'], $pad, ' ', STR_PAD_RIGHT).' | '.date('Y-m-d H:i:s', strtotime($n['created_at'])).PHP_EOL), $keys);
+
         /**
          * Return zero for success
          */
@@ -151,15 +147,14 @@ class GanderConsole extends Command
      *
      * @return Int
      */
-    protected function deleteKey():Int
+    protected function deleteKey(): Int
     {
         $apiKeyName = $this->option('delete-key');
 
         try {
             GanderApiKey::where('name', '=', $apiKeyName)->delete();
             $this->info("Key $apiKeyName deleted");
-        }
-        catch (\Exception $e) {
+        } catch (\Exception $e) {
             $this->info("Could not delete key $apiKeyName");
         }
 
@@ -178,13 +173,14 @@ class GanderConsole extends Command
      * @param  String $outfilePath
      * @return void
      */
-    protected function writeClient(String $apiDomain, String $apiKeyName, String $apiKey, String $outfilePath):void
+    protected function writeClient(String $apiDomain, String $apiKeyName, String $apiKey, String $outfilePath): void
     {
         $clientTemplateHtml = file_get_contents(dirname(__FILE__).DIRECTORY_SEPARATOR.'client_template.html');
         $clientTemplateHtml = str_replace(
             ['!!apiDomain!!', '!!apiKey!!', '!!apiKeyName!!'],
             [$apiDomain, $apiKey, $apiKeyName],
-            $clientTemplateHtml);
+            $clientTemplateHtml
+        );
 
         $fp = fopen($outfilePath, 'w');
         fwrite($fp, $clientTemplateHtml);
@@ -196,7 +192,7 @@ class GanderConsole extends Command
      *
      * @return bool True if can be written to disk
      */
-    private function preflightFileWrite(String $path):bool
+    private function preflightFileWrite(String $path): bool
     {
         // directory exists
         if(!file_exists(dirname($path))) {
@@ -215,19 +211,19 @@ class GanderConsole extends Command
             $this->error('A client outfile at this location already exists');
             return false;
         }
-        
+
         return true;
     }
 
     /**
-     * Write the api key/name to the database. 
+     * Write the api key/name to the database.
      * If there is a duplicate generated key name, return false so we can try again
      * until uniqueness is required. If the name is user-supplied and duplicate, return
      * true and do not write so we can re-use the existing key.
      *
      * @return bool
      */
-    private function writeApiKey(String $apiKeyName, String $apiKey):bool
+    private function writeApiKey(String $apiKeyName, String $apiKey): bool
     {
         $isCustom = $this->option('key-name') == null ? false : true;
         $nameExists = (bool)GanderApiKey::where('name', '=', $apiKeyName)->count();
@@ -249,13 +245,13 @@ class GanderConsole extends Command
     }
 
     /**
-     * Deletes an api key that has a generated name. Used to 
+     * Deletes an api key that has a generated name. Used to
      * clean up in the event of an error in createClient.
      *
      * @param  String $apiKeyName
      * @return void
      */
-    private function deleteApiKey(String $apiKeyName):void
+    private function deleteApiKey(String $apiKeyName): void
     {
         $isCustom = $this->option('key-name') == null ? false : true;
         if(!$isCustom) {
@@ -269,7 +265,7 @@ class GanderConsole extends Command
      *
      * @return String
      */
-    private function getOutfileName(String $apiDomain, String $apiKeyName):String
+    private function getOutfileName(String $apiDomain, String $apiKeyName): String
     {
         /**
          * If user-supplied outfile path not supplied, generate path
@@ -279,14 +275,14 @@ class GanderConsole extends Command
         /**
          * Function to expand ~ to home directory as bash would
          */
-        $expandTilde = function($path) {
-            return $path[0] == '~' ? posix_getpwuid(posix_getuid())['dir'].substr($path,1) : $path;
+        $expandTilde = function ($path) {
+            return $path[0] == '~' ? posix_getpwuid(posix_getuid())['dir'].substr($path, 1) : $path;
         };
 
         /**
          * Function to get absolute path of file
          */
-        $makeRealPath = function($path) {
+        $makeRealPath = function ($path) {
             return realpath(dirname($path)).DIRECTORY_SEPARATOR.basename($path);
         };
 
@@ -299,7 +295,7 @@ class GanderConsole extends Command
      *
      * @return String
      */
-    private function getKeyName():String
+    private function getKeyName(): String
     {
         return $this->option('key-name') ?? $this->generateKeyName();
     }
@@ -309,7 +305,7 @@ class GanderConsole extends Command
      *
      * @return String
      */
-    private function generateKey():String
+    private function generateKey(): String
     {
         return bin2hex(random_bytes(16));
     }
@@ -319,7 +315,7 @@ class GanderConsole extends Command
      *
      * @return String
      */
-    private function generateKeyName():String
+    private function generateKeyName(): String
     {
         $adjectives = [
             'Ancient',
@@ -358,6 +354,6 @@ class GanderConsole extends Command
             'Willow',
         ];
 
-        return $adjectives[rand(1,count($adjectives)-1)].$nouns[rand(1,count($nouns)-1)].rand(10,99).range('a', 'z')[rand(0,25)];
+        return $adjectives[rand(1, count($adjectives) - 1)].$nouns[rand(1, count($nouns) - 1)].rand(10, 99).range('a', 'z')[rand(0, 25)];
     }
 }
