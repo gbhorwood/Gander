@@ -30,12 +30,12 @@ class GanderController extends BaseController
      * @param  Request $request
      * @return JsonResponse
      */
-    public function options(Request $request):JsonResponse
+    public function options(Request $request): JsonResponse
     {
         return response()->json()
-            ->header("Access-Control-Allow-Headers",  "Origin, X-Gander-Key")
-            ->header("Access-Control-Allow-Methods",  "GET")
-            ->header("Access-Control-Allow-Origin",  "*");
+            ->header("Access-Control-Allow-Headers", "Origin, X-Gander-Key")
+            ->header("Access-Control-Allow-Methods", "GET")
+            ->header("Access-Control-Allow-Origin", "*");
     }
 
     /**
@@ -46,7 +46,7 @@ class GanderController extends BaseController
      * @param  String $units  One of 'minute', 'hour', 'day', 'week', 'month'
      * @return JsonResponse
      */
-    public function getRequestsStats(Request $request, Int $number, String $units):JsonResponse
+    public function getRequestsStats(Request $request, Int $number, String $units): JsonResponse
     {
         /**
          * Validate api key manually
@@ -63,15 +63,14 @@ class GanderController extends BaseController
         try {
             $number = $this->validateTimeNumber($number);
             $units = $this->validateTimeUnits($units);
-        }
-        catch(\Exception $e) {
+        } catch(\Exception $e) {
             return $this->sendError(400, $e->getMessage());
         }
 
         /**
          * Select base stats on method/endpoint combinations
          */
-        $sql =<<<SQL
+        $sql = <<<SQL
         SELECT      grq.method,
                     grq.endpoint,
                     COUNT(*) AS total,
@@ -96,8 +95,8 @@ class GanderController extends BaseController
         /**
          * Counts by response status for each method/endpoint
          */
-        $report = array_map(function($r) use($number, $units){
-            $sql =<<<SQL
+        $report = array_map(function ($r) use ($number, $units) {
+            $sql = <<<SQL
             SELECT      response_status,
                         ANY_VALUE(response_status_text) as response_status_text,
                         COUNT(*) AS total
@@ -124,7 +123,7 @@ class GanderController extends BaseController
      * @param  String $units  One of 'minute', 'hour', 'day', 'week', 'month'
      * @return JsonResponse
      */
-    public function getRequestsLogs(Request $request, Int $number, String $units):JsonResponse
+    public function getRequestsLogs(Request $request, Int $number, String $units): JsonResponse
     {
         /**
          * Validate api key manually
@@ -141,9 +140,8 @@ class GanderController extends BaseController
         try {
             $number = $this->validateTimeNumber($number);
             $units = $this->validateTimeUnits($units);
-		    $startDate = date('Y-m-d H:i:s', strtotime("-$number $units"));
-        }
-        catch(\Exception $e) {
+            $startDate = date('Y-m-d H:i:s', strtotime("-$number $units"));
+        } catch(\Exception $e) {
             return $this->sendError(400, $e->getMessage());
         }
 
@@ -189,6 +187,13 @@ class GanderController extends BaseController
         }
 
         /**
+         * Filter on ip optionally
+         */
+        if(isset($request->user_ip)) {
+            $requestsPage->where('user_ip', '=', $request->user_ip);
+        }
+
+        /**
          * Order by
          */
         $requestsPage = $requestsPage->orderBy('created_at', 'desc')->paginate($size);
@@ -196,8 +201,8 @@ class GanderController extends BaseController
         /**
          * Reformat
          */
-		$requestsItems = $requestsPage->items();
-		$requestsHateoas = $this->createPaginationFromOrm($requestsPage);
+        $requestsItems = $requestsPage->items();
+        $requestsHateoas = $this->createPaginationFromOrm($requestsPage);
 
         /**
          * HTTP 200
@@ -211,7 +216,7 @@ class GanderController extends BaseController
      * @param  String $request_id
      * @return JsonResponse
      */
-    public function getRequest(Request $request, String $requestId):JsonResponse
+    public function getRequest(Request $request, String $requestId): JsonResponse
     {
         /**
          * Validate api key manually
@@ -233,7 +238,7 @@ class GanderController extends BaseController
      * @return Int
      * @throws Exception
      */
-    private function validateTimeNumber(Int $number):Int
+    private function validateTimeNumber(Int $number): Int
     {
         if($number < 1) {
             throw new \Exception("Time number must be at least 1");
@@ -249,7 +254,7 @@ class GanderController extends BaseController
      * @return String The appropriate unit value
      * @throws Exception
      */
-    private function validateTimeUnits(String $unit):String
+    private function validateTimeUnits(String $unit): String
     {
         $timeUnits = [
             'minute' => 'minute',
