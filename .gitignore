@@ -5,3 +5,5 @@ vendor
 tags.lock
 swagger/node_modules
 swagger/upload/*
+src/.php-cs-fixer.cache
+.php-cs-fixer.cache
