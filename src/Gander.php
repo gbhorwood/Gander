@@ -1,4 +1,5 @@
 <?php
+
 namespace Gbhorwood\Gander;
 
 use Closure;
@@ -21,12 +22,12 @@ use Gbhorwood\Gander\Models\GanderRequest;
  * Gander middleware and static functions
  *
  */
-class Gander 
+class Gander
 {
     /**
      * Array to track all entries made by track()
      */
-    protected static Array $stack = [];
+    protected static array $stack = [];
 
     /**
      * Middleware to track and write request and stack logs.
@@ -35,7 +36,7 @@ class Gander
      * @param  Closure $next
      * @return Response
      */
-    public function handle(Request $request, Closure $next):Response
+    public function handle(Request $request, Closure $next): Response
     {
         /**
          * If gander is not enabled, return early
@@ -43,7 +44,7 @@ class Gander
         if(!config('gander.enabled')) {
             return $next($request);
         }
-        
+
         /**
          * Set id that references stack entries to a request entry
          */
@@ -60,7 +61,7 @@ class Gander
          * called across functions, but use it here because it is faster in vms.
          */
         $startHrTime = hrtime(true);
-        
+
         /**
          * Next middleware
          */
@@ -109,7 +110,7 @@ class Gander
          * Insert stack, if any
          */
         if(count(self::$stack) > 0) {
-            $stackInserts = array_map(function($s) use($requestId, $userId) {
+            $stackInserts = array_map(function ($s) use ($requestId, $userId) {
                 return [
                     'request_id' => $requestId,
                     'sequence' => $s['sequence'],
@@ -124,7 +125,7 @@ class Gander
             }, self::$stack);
             GanderStack::insert($stackInserts);
         }
-        
+
         /**
          * Clean up
          */
@@ -142,7 +143,7 @@ class Gander
      * @param  String $message Optional custom message to add to the tracking call
      * @return bool
      */
-    public static function track(String $message=null):bool
+    public static function track(String $message = null): bool
     {
         /**
          * If gander is not enabled, return
@@ -175,7 +176,7 @@ class Gander
             'now_microseconds' => $nowMicroseconds,
             'elapsed_seconds' => $elapsedSeconds,
             'message' => $message,
-        ]; 
+        ];
 
         return true;
     }
@@ -186,7 +187,7 @@ class Gander
      *
      * @return String
      */
-    public static function randUniqueId():String
+    public static function randUniqueId(): String
     {
         return bin2hex(random_bytes(7));
     }
@@ -200,12 +201,12 @@ class Gander
      * @param  String $json The json body
      * @return ?String The new json body with password scrubbed
      */
-    private function scrubPasswords(String $json):?String
+    private function scrubPasswords(String $json): ?String
     {
         /**
          * Get the keys that contain passwords from the config
          */
-        $passwordKeys = array_map(fn($p) => trim($p), explode(',', config('gander.password_keys')));
+        $passwordKeys = array_map(fn ($p) => trim($p), explode(',', config('gander.password_keys')));
 
         /**
          * Function to validate if json or not
@@ -220,8 +221,8 @@ class Gander
         /**
          * Recursive function to scrub password values at any depth
          */
-        $r = function($j) use(&$r, $passwordKeys){
-            $f = function($k, $v) use($passwordKeys){
+        $r = function ($j) use (&$r, $passwordKeys) {
+            $f = function ($k, $v) use ($passwordKeys) {
                 return in_array($k, $passwordKeys) ? "*******" : $v;
             };
             foreach($j as $k => $v) {
