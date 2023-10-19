@@ -9,7 +9,7 @@
 
             /**
              * Configuration values
-            */
+             */
             api_domain = '!!apiDomain!!'
             api_key = '!!apiKey!!'
             api_key_name = '!!apiKeyName!!'
@@ -349,10 +349,11 @@
                             navigation_div = $('<div id="navigation_div"><div id="leftnav"></div>'+current_page+'/'+last_page+'<div id="rightnav"></div></div>')
                             $('#logs_div').append(navigation_div)
 
-                            right_arrow = $('<b page='+(current_page+1)+' size='+current_size+'> &rarr;</b>')
+                            right_arrow = $('<b page='+(current_page+1)+' size='+current_size+'><i class="arrow right"></i></b>')
+                                    
                             right_arrow.click(navigate_page)
 
-                            left_arrow = $('<b page='+(current_page-1)+' size='+current_size+'> &larr;</b>')
+                            left_arrow = $('<b page='+(current_page-1)+' size='+current_size+'><i class="arrow left"></b>')
                             left_arrow.click(navigate_page)
                             
                             $('#rightnav').append(right_arrow)
@@ -384,12 +385,13 @@
                             status_choice_div = $('<div id="status_container">' +
                                                   '<span class="status_check"><b>endpoint:</b> <span class="endpoint_filter_display">' + endpoint_filter + '</span> <span class="endpoint_filter_remove">clear</span></span>' +
                                                   '<span class="status_check"><b>user ip:</b> <span class="endpoint_filter_display">' + user_ip_filter + '</span> <span class="user_ip_filter_remove">clear</span></span>' +
-                                                  '<b>status:</b> ' +
-                                                  '<label class="status_check"><input type="radio" name="status" id="status_all" value="all">all</label>' +
-                                                  '<label class="status_check"><input type="radio" name="status" id="status_2xx" value="2xx">2xx</label>' +
-                                                  '<label class="status_check"><input type="radio" name="status" id="status_3xx" value="3xx">3xx</label>' +
-                                                  '<label class="status_check"><input type="radio" name="status" id="status_4xx" value="4xx">4xx</label>' +
-                                                  '<label class="status_check"><input type="radio" name="status" id="status_5xx" value="5xx">5xx</label>' +
+                                                  '<span class="status_check"><b>status:</b> ' +
+                                                  '<label><input type="radio" name="status" id="status_all" value="all">all</label>' +
+                                                  '<label><input type="radio" name="status" id="status_2xx" value="2xx">2xx</label>' +
+                                                  '<label><input type="radio" name="status" id="status_3xx" value="3xx">3xx</label>' +
+                                                  '<label><input type="radio" name="status" id="status_4xx" value="4xx">4xx</label>' +
+                                                  '<label><input type="radio" name="status" id="status_5xx" value="5xx">5xx</label>' +
+                                                  '</span>' +
                                                   '</div>')
                                     
                             $('#logs_div').append(status_choice_div)
@@ -675,30 +677,32 @@
             cursor: pointer;
             border-radius: 3px;
             border: 1px solid black;
-            padding: 3px 1px 1px 1px;
+            padding: 4px 1px 1px 1px;
             text-align: center;
-            width: 7ch;
+            width: 5ch;
             float: right;
+            font: 12px "Helvetica Neue", Helvetica, Arial, sans-serif;
         }
 
         .endpoint_filter_button:hover {
-            border: 1px solid darkgrey;
-            color: darkgrey;
+            border: 1px solid black;
+            background-color: ivory;
         }
 
         .user_ip_filter_button {
             cursor: pointer;
             border-radius: 3px;
             border: 1px solid black;
-            padding: 3px 1px 1px 1px;
+            padding: 4px 1px 1px 1px;
             text-align: center;
-            width: 7ch;
+            width: 5ch;
             float: right;
+            font: 12px "Helvetica Neue", Helvetica, Arial, sans-serif;
         }
 
         .user_ip_filter_button:hover {
-            border: 1px solid darkgrey;
-            color: darkgrey;
+            border: 1px solid black;
+            background-color: ivory;
         }
 
         .user_ip_filter_remove {
@@ -976,6 +980,7 @@
         }
 
         #status_container {
+            margin-top: 10px;
             font: 14px "Helvetica Neue", Helvetica, Arial, sans-serif;
         }
 
@@ -1105,6 +1110,24 @@
         center {
             height: 85%;
             min-height: 75vh;
+        }
+
+        .arrow {
+            border: solid black;
+            border-width: 0 3px 3px 0;
+            display: inline-block;
+            padding: 3px;
+            margin-bottom: 2px;
+        }
+
+        .right {
+            transform: rotate(-45deg);
+            -webkit-transform: rotate(-45deg);
+        }
+
+        .left {
+            transform: rotate(135deg);
+            -webkit-transform: rotate(135deg);
         }
 
         .footer_text {
