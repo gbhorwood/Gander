@@ -33,4 +33,13 @@ return [
     |
     */
     'password_keys' => env('GANDER_PASSWORD_KEYS', "password,repeat_password,password_repeat,again_password,password_again"),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Log request headers
+    |--------------------------------------------------------------------------
+    | Comma-separated list of request headers to log
+    |
+    */
+    'headers_to_log' => env('GANDER_HEADERS_TO_LOG', "x-authorization"),
 ];
