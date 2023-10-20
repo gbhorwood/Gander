@@ -41,5 +41,5 @@ return [
     | Comma-separated list of request headers to log
     |
     */
-    'headers_to_log' => env('GANDER_HEADERS_TO_LOG', "x-authorization"),
+    'headers_to_log' => env('GANDER_HEADERS_TO_LOG', "x-authorization,user-agent"),
 ];
