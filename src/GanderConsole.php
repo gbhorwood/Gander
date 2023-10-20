@@ -95,8 +95,8 @@ class GanderConsole extends Command
          * Generate and save the key
          */
         do {
-            $apiKey = $this->generateKey();
             $apiKeyName = $this->getKeyName();
+            $apiKey = $this->generateKey($apiKeyName);
             $keyWritten = $this->writeApiKey($apiKeyName, $apiKey);
         } while(!$keyWritten);
 
@@ -313,10 +313,15 @@ class GanderConsole extends Command
     /**
      * Generate a 32 char api key.
      *
+     * @param  String $apiKeyName
      * @return String
      */
-    private function generateKey(): String
+    private function generateKey(String $apiKeyName): String
     {
+        $nameExists = (bool)GanderApiKey::where('name', '=', $apiKeyName)->count();
+        if($nameExists) {
+            return GanderApiKey::where('name', '=', $apiKeyName)->first()->key;
+        }
         return bin2hex(random_bytes(16));
     }
 
