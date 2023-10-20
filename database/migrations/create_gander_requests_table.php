@@ -19,7 +19,8 @@ return new class() extends Migration
             $table->string('endpoint');
             $table->integer('response_status');
             $table->string('response_status_text', 32)->nullable();
-            $table->string('url')->nullable();
+            $table->text('url')->nullable();
+            $table->text('request_headers_json')->nullable();
             $table->json('request_body_json')->nullable();
             $table->json('response_body_json')->nullable();
             $table->unsignedBigInteger('user_id')->nullable();

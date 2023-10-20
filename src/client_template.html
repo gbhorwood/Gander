@@ -95,6 +95,7 @@
              * Resets all details divs
              */
             function clear_details() {
+                console.log('clear_details')
                 $('#details_stats').html('')
                 $('#details_logs_datetime').html('')
                 $('#details_logs_datetime').hide()
@@ -107,8 +108,11 @@
                 $('#details_logs_response').hide()
                 $('#details_logs_stack').html('')
                 $('#details_logs_stack').hide()
+                $('#request_headers_stack').html('')
+                $('#request_headers_stack').hide()
                 $('#details_logs_perma_link').html('')
                 $('#details_logs_stack_title').hide()
+                $('#request_headers_title').hide()
             }
 
             /**
@@ -518,6 +522,22 @@
                                 response_body_json = JSON.stringify(JSON.parse(data['response_body_json']), null, 2)
                                 $('#details_logs_response_textarea').html(response_body_json)
                                 $("#details_logs_response").show();
+                            }
+
+                            // BOOKMARK
+                            if(data['request_headers_json'] != null) {
+                                request_headers = JSON.parse(data['request_headers_json'])
+
+                                i = 1
+                                for(const key in request_headers) {
+                                    header_line = i%2 == 1 ? 
+                                                '<div class="headers_line"><span class="headers_key">'+key+'</span><span class="headers_value">'+request_headers[key]+'</span></div>' :
+                                                '<div class="headers_line grey"><span class="headers_key">'+key+'</span><span class="headers_value">'+request_headers[key]+'</span></div>' 
+                                    i++
+                                    $('#request_headers_stack').append($(header_line))
+                                }
+                                $('#request_headers_title').show()
+                                $('#request_headers_stack').show()
                             }
 
                             stack = data['stack']
@@ -1112,6 +1132,35 @@
             min-height: 75vh;
         }
 
+        #request_headers_stack {
+            font: 14px monospace;
+            width: 100%;
+            margin-bottom: 20px;
+        }
+
+        .headers_line {
+            font: 14px monospace;
+            width: 100%;
+            padding-bottom: 25px;
+        }
+
+        .headers_line.grey {
+            background-color: #f1f1ef;
+        }
+
+        .headers_key {
+            float: left;
+            width: 20%;
+            text-align: left;
+            font-weight: bold;
+        }
+
+        .headers_value {
+            float: right;
+            width: 80%;
+            text-align: right;
+        }
+
         .arrow {
             border: solid black;
             border-width: 0 3px 3px 0;
@@ -1214,13 +1263,17 @@
             <div id="details_logs_endpoint"></div>
             <div id="details_logs_status"></div>
             <div id="details_logs_request">
-                <div class="json_body_header">request</div>
+                <div class="json_body_header">request body</div>
                 <textarea id="details_logs_request_textarea" class="json_body_textarea"></textarea>
             </div>
             <div id="details_logs_response">
-                <div class="json_body_header">response</div>
+                <div class="json_body_header">response body</div>
                 <textarea id="details_logs_response_textarea" class="json_body_textarea"></textarea>
             </div>
+
+            <div id="request_headers_title" class="json_body_header">request headers</div>
+            <div id="request_headers_stack"></div>
+
             <div id="details_logs_stack_title" class="json_body_header">stack</div>
             <div id="details_logs_stack"></div>
             <div id="details_logs_perma_link"></div>

@@ -47,6 +47,7 @@ class GanderRequest extends Model
             'elapsed_seconds' => $this->elapsed_seconds,
             'user_id' => $this->user_id,
             'user_ip' => $this->user_ip,
+            'request_headers_json' => $this->request_headers_json,
             'request_body_json' => $this->request_body_json,
             'response_body_json' => $this->response_body_json,
             'stack' => $this->stack,
