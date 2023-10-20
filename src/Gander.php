@@ -88,6 +88,14 @@ class Gander
         }
 
         /**
+         * Get headers to log in request
+         */
+        $headersToLog = array_map(fn ($p) => trim($p), explode(',', config('gander.headers_to_log')));
+        $requestHeadersJson = @json_encode(
+            array_combine(array_values($headersToLog), array_map(fn ($h) => $request->header($h), $headersToLog))
+        );
+
+        /**
          * Insert request
          */
         $requestInsert = [
@@ -97,6 +105,7 @@ class Gander
             'response_status' => $response->status(),
             'response_status_text' => $response->statusText(),
             'url' => substr(str_replace($request->root(), '', $request->fullUrl()), -254),
+            'request_headers_json' => $requestHeadersJson,
             'request_body_json' => $request->isJson() ? $this->scrubPasswords($request->getContent()) : null,
             'response_body_json' => $responseBodyJson,
             'user_id' => $userId,
