@@ -70,9 +70,19 @@ class GanderConsole extends Command
     protected function createClient(): Int
     {
         $apiDomain = trim(env('APP_URL'));
+        $apiDomain = trim(config('app.url'));
 
         /**
-         * Poll user that APP_URL is the correct domain
+         * Validate app url exists
+         */
+        if(strlen($apiDomain) == 0) {
+            $this->line('No url for this api. Please fix or .env or config/app.php file');
+            $this->error('exiting');
+            return 1;
+        }
+
+        /**
+         * Poll user for confirmation that APP_URL is the correct domain
          * Return non-zero for error
          */
         if(!$this->confirm($apiDomain.PHP_EOL."is this the correct api domain?", true)) {
