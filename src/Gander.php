@@ -96,6 +96,20 @@ class Gander
         );
 
         /**
+         * Function to validate if a string is json
+         * @param  String $value
+         * @return bool
+         */
+        $validateJson = function(String $value):bool {
+            try {
+                json_decode($value, true, 512, JSON_THROW_ON_ERROR);
+                return true;
+            } catch (\JsonException) {
+                return false;
+            }
+        };
+
+        /**
          * Insert request
          */
         $requestInsert = [
@@ -107,7 +121,7 @@ class Gander
             'url' => substr(str_replace($request->root(), '', $request->fullUrl()), -254),
             'request_headers_json' => $requestHeadersJson,
             'request_body_json' => $request->isJson() ? $this->scrubPasswords($request->getContent()) : null,
-            'response_body_json' => $responseBodyJson,
+            'response_body_json' => $validateJson($responseBodyJson) ? $responseBodyJson : "[\"".addslashes($responseBodyJson)."\"]",
             'user_id' => $userId,
             'user_ip' => $request->ip(),
             'elapsed_seconds' => number_format(($endHrTime - $startHrTime) / 1000000000, 5),
