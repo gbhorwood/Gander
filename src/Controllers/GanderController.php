@@ -194,6 +194,13 @@ class GanderController extends BaseController
         }
 
         /**
+         * Filter on user_id optionally
+         */
+        if(isset($request->user_id)) {
+            $requestsPage->where('user_id', '=', $request->user_id);
+        }
+
+        /**
          * Order by
          */
         $requestsPage = $requestsPage->orderBy('created_at', 'desc')->paginate($size);

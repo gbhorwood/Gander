@@ -2,6 +2,7 @@
 <html>
 <head>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 
     <script>
 
@@ -33,6 +34,7 @@
             var status_filter = 'all'
             var endpoint_filter = 'all endpoints'
             var user_ip_filter = 'all ips'
+            var user_id_filter = 'all users'
 
             /**
              * Set default time ago to 1 hour
@@ -262,6 +264,10 @@
                     url += '&user_ip='+user_ip_filter
                 }
 
+                if(user_id_filter != 'all users') {
+                    url += '&user_id='+user_id_filter
+                }
+
                 /**
                  * Ajax call
                  */
@@ -294,11 +300,11 @@
                                          <thead>
                                              <tr>
                                                  <th class="endpointcol">endpoint</th>
-                                                 <th align="center">status</th>
-                                                 <th>elapsed</th>
-                                                 <th>user</th>
-                                                 <th>ip</th>
-                                                 <th align="center">time</th>
+                                                 <th align="center" style="width:10%">status</th>
+                                                 <th style="width:15%">elapsed</th>
+                                                 <th style="width:5%">user</th>
+                                                 <th style="width:15%">ip</th>
+                                                 <th align="center" style="width:15%">time</th>
                                              </tr>
                                          </thead>
                                          <tbody id="logs_table">
@@ -315,11 +321,11 @@
                                 request_id = logs[k]['request_id']
                                 tr = $('<tr class="entryrow" request_id="'+request_id+'" logs_index='+k+'>'+
                                        '<td><span class="method_'+logs[k]['method']+'"><b>'+logs[k]['method'] +'</b></span>'+
-                                       '<span class="endpointtext">'+logs[k]['endpoint']+'</span><span class="endpoint_filter_button" endpoint="'+logs[k]['endpoint']+'">filter</span></td>'+
+                                       '<span class="endpointtext">'+logs[k]['endpoint']+'</span><span class="endpoint_filter_button" endpoint="'+logs[k]['endpoint']+'"><i class="fa fa-filter" style="font-size:14px"></i></span></td>'+
                                        '<td style="text-align:center">'+logs[k]['response_status']+'</td>'+
                                        '<td style="text-align:center">'+logs[k]['elapsed_seconds']+'</td>'+
-                                       '<td style="text-align:center">'+user_id+'</td>'+
-                                       '<td style="text-align:center">'+user_ip+' <span class="user_ip_filter_button" user_ip="'+logs[k]['user_ip']+'">filter</span></td>'+
+                                       '<td style="text-align:center">'+user_id+ (user_id != '-' ? '<span class="user_id_filter_button" user_id="'+logs[k]['user_id']+'"><i class="fa fa-filter" style="font-size:14px"></i></span>' : '') + '</td>'+
+                                       '<td style="text-align:center">'+user_ip+' <span class="user_ip_filter_button" user_ip="'+logs[k]['user_ip']+'"><i class="fa fa-filter" style="font-size:14px"></i></span></td>'+
                                        '<td style="text-align:center">'+logs[k]['created_at']+'</td>'+
                                        '</tr>')
 
@@ -340,6 +346,14 @@
                              */
                             $('.user_ip_filter_button').click(function() {
                                 user_ip_filter = $(this).attr('user_ip')
+                                load_logs(1,10)
+                            })
+
+                            /**
+                             * User id filter event
+                             */
+                            $('.user_id_filter_button').click(function() {
+                                user_id_filter = $(this).attr('user_id')
                                 load_logs(1,10)
                             })
 
@@ -389,6 +403,7 @@
                             status_choice_div = $('<div id="status_container">' +
                                                   '<span class="status_check"><b>endpoint:</b> <span class="endpoint_filter_display">' + endpoint_filter + '</span> <span class="endpoint_filter_remove">clear</span></span>' +
                                                   '<span class="status_check"><b>user ip:</b> <span class="endpoint_filter_display">' + user_ip_filter + '</span> <span class="user_ip_filter_remove">clear</span></span>' +
+                                                  '<span class="status_check"><b>user id:</b> <span class="endpoint_filter_display">' + user_id_filter + '</span> <span class="user_id_filter_remove">clear</span></span>' +
                                                   '<span class="status_check"><b>status:</b> ' +
                                                   '<label><input type="radio" name="status" id="status_all" value="all">all</label>' +
                                                   '<label><input type="radio" name="status" id="status_2xx" value="2xx">2xx</label>' +
@@ -409,6 +424,11 @@
 
                             $('.user_ip_filter_remove').click(function() {
                                 user_ip_filter = 'all ips'
+                                load_logs(1,10)
+                            })
+
+                            $('.user_id_filter_remove').click(function() {
+                                user_id_filter = 'all ips'
                                 load_logs(1,10)
                             })
             }
@@ -672,6 +692,7 @@
             overflow: hidden;
             white-space: nowrap;
             text-align: left;
+            width: 40%;
         }
 
         .endpoint_filter_display {
@@ -736,6 +757,31 @@
 
         .user_ip_filter_remove:hover {
             border: 1px solid grey;
+        }
+
+        .user_id_filter_button {
+            cursor: pointer;
+            border-radius: 3px;
+            border: 1px solid black;
+            padding: 4px 1px 1px 1px;
+            text-align: center;
+            width: 5ch;
+            float: right;
+            font: 12px "Helvetica Neue", Helvetica, Arial, sans-serif;
+        }
+
+        .user_id_filter_button:hover {
+            border: 1px solid black;
+            background-color: ivory;
+        }
+
+        .user_id_filter_remove {
+            cursor: pointer;
+            border-radius: 3px;
+            border: 1px solid black;
+            padding: 4px 4px 2px 4px;
+            text-align: center;
+            color: #8E9324;
         }
 
         .method_GET {
