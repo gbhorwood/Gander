@@ -87,7 +87,7 @@ Here, the call to `Gander::track()` in both `getNumber()` and `generateNumber()`
 If `GANDER_ENABLE_STACK_TIMERS` is set to `true`, each call to `Gander::track()` will log the elapsed time, in seconds, since the last call to `track`.
 
 ## Generating a client
-Data logged by Gander can be viewed with a javascript client that runs in your browser. A client can be created by calling the gander artisan command in the root directory of yor api.
+Data logged by Gander can be viewed with a javascript client that runs in your browser. A client can be created by calling the gander artisan command in the root directory of your api.
 
 ```shell
 php artisan gbhorwood:gander --create-client
