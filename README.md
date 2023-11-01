@@ -34,13 +34,13 @@ GANDER_PASSWORD_KEYS=password,repeat_password,password_repeat,again_password,pas
 GANDER_HEADERS_TO_LOG=x-authorization,user-agent
 ```
 
-*`GANDER_ENABLE`*: Setting `GANDER_ENABLE` to `false` will turn off Gander completely. Gander is on by default.
+**`GANDER_ENABLE`**: Setting `GANDER_ENABLE` to `false` will turn off Gander completely. Gander is on by default.
 
-*`GANDER_ENABLE_STACK_TIMERS`*: Setting `GANDER_ENABLE_STACK_TIMERS` to false will disable the elapsed time value on all log writes you have added to your code using `Gander::track()`. Stack timers are on by default.
+**`GANDER_ENABLE_STACK_TIMERS`**: Setting `GANDER_ENABLE_STACK_TIMERS` to false will disable the elapsed time value on all log writes you have added to your code using `Gander::track()`. Stack timers are on by default.
 
-*`GANDER_PASSWORD_KEYS`*: Gander attempts to sanitize password data from request bodies before writing to the database by removing a value if its key matches one of the keys listed in `GANDER_PASSWORD_KEYS`. If you accept password data keyed with something not in the `GANDER_PASSWORD_KEYS` list, add it.
+**`GANDER_PASSWORD_KEYS`**: Gander attempts to sanitize password data from request bodies before writing to the database by removing a value if its key matches one of the keys listed in `GANDER_PASSWORD_KEYS`. If you accept password data keyed with something not in the `GANDER_PASSWORD_KEYS` list, add it.
 
-*`GANDER_HEADERS_TO_LOG`*: Gander can log a subset of request headers. Header names to log are listed here as a comma-separated list. If no headers are listed, only `X-Authorization` and `User-Agent` are stored.
+**`GANDER_HEADERS_TO_LOG`**: Gander can log a subset of request headers. Header names to log are listed here as a comma-separated list. If no headers are listed, only `X-Authorization` and `User-Agent` are stored.
 
 ### A short note on timer configuration
 Timing of the elapsed seconds of a request is done internally using php's [`hrtime()`](https://www.php.net/manual/en/function.hrtime.php) for performance reasons. However, `hrtime()` is unreliable when called across function calls. For this reason, calculating the elapsed time when writing log calls made by `Gander::track()` is done using [`microtime()`](https://www.php.net/manual/en/function.microtime.php). However, `microtime()` may be slow in some virtual environments who's [vDSO](https://man7.org/linux/man-pages/man7/vdso.7.html) does not allow access to the clock. For this reason, Gander allows you to turn off the use of `microtime()` by setting `GANDER_ENABLE_STACK_TIMERS` to `false`.
