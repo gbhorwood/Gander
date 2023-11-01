@@ -25,7 +25,7 @@ php artisan gbhorwood:gander --create-client
 Then load the html file in a browser, either by hosting it on any http server or by opening it as a file in your browser.
 
 ## Configuration
-Gander has three configuration values that can be added to your `.env` file:
+Gander has four configuration values that can be added to your `.env` file:
 
 ```
 GANDER_ENABLE=true
