@@ -50,6 +50,7 @@ class GanderRequest extends Model
             'request_headers_json' => $this->request_headers_json,
             'request_body_json' => $this->request_body_json,
             'response_body_json' => $this->response_body_json,
+            'curl' => $this->curl,
             'stack' => $this->stack,
             'created_at' => date('Y-m-d H:i:s', strtotime($this->created_at)),
         ];

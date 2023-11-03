@@ -25,6 +25,7 @@ return new class() extends Migration
             $table->json('response_body_json')->nullable();
             $table->unsignedBigInteger('user_id')->nullable();
             $table->ipAddress('user_ip')->nullable();
+            $table->text('curl')->nullable();
             $table->float('elapsed_seconds', 12, 5)->nullable();
             $table->timestamps();
 

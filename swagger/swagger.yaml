@@ -369,6 +369,11 @@ components:
           nullable: true
           description: The ip address of the user making the request if any
           example: "192.168.1.70"
+        curl:
+          type: string
+          nullable: true
+          description: A curl command line call to recreate this request
+          example: "curl -X GET http://example.ca/path/to/endpoint --compressed"
         stack:
           type: array
           description:
