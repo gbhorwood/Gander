@@ -100,7 +100,7 @@ class Gander
          * @param  String $value
          * @return bool
          */
-        $validateJson = function(String $value):bool {
+        $validateJson = function (String $value): bool {
             try {
                 json_decode($value, true, 512, JSON_THROW_ON_ERROR);
                 return true;
@@ -124,6 +124,7 @@ class Gander
             'response_body_json' => $validateJson($responseBodyJson) ? $responseBodyJson : "[\"".addslashes($responseBodyJson)."\"]",
             'user_id' => $userId,
             'user_ip' => $request->ip(),
+            'curl' => $this->getCurl($request),
             'elapsed_seconds' => number_format(($endHrTime - $startHrTime) / 1000000000, 5),
             'created_at' => date('Y-m-d H:i:s'),
         ];
@@ -258,5 +259,26 @@ class Gander
          * Return json body as string with password values scrubbed
          */
         return $v($json) ? json_encode($r(json_decode($json, true))) : null;
+    }
+
+    /**
+     * Get a command-line curl as a string from the request
+     *
+     * @param  Request $request
+     * @return String
+     */
+    private function getCurl(Request $request): String
+    {
+        $curl[] = "curl -s -X ".strtoupper($request->method());
+        foreach($request->headers->all() as $k => $v) {
+            foreach($v as $v1) {
+                if(strlen($v1) > 0) {
+                    $curl[] = "-H \"$k: $v1\"";
+                }
+            }
+        }
+        $curl[] = "\"".$request->fullUrl()."\"";
+        $curl[] = $request->isJson() ? "-d \"".addslashes($this->scrubPasswords($request->getContent()))."\"" : null;
+        return join(" \\".PHP_EOL, $curl)."--compressed";
     }
 }
