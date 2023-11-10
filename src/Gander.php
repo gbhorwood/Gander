@@ -53,7 +53,11 @@ class Gander
         /**
          * User id, ie from passport, if any
          */
-        $userId = @auth()->guard('api')->user()->id ?? null;
+        $userId = null;
+        try {
+            $userId = @auth()->guard('api')->user()->id ?? null;
+        } catch(\Exception $e) {
+        }
 
         /**
          * hrtime start for tracking elapsed time
