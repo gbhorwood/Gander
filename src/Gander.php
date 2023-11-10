@@ -108,7 +108,7 @@ class Gander
             try {
                 json_decode($value, true, 512, JSON_THROW_ON_ERROR);
                 return true;
-            } catch (\JsonException) {
+            } catch (\Exception $e) {
                 return false;
             }
         };
@@ -124,7 +124,7 @@ class Gander
             'response_status_text' => $response->statusText(),
             'url' => substr(str_replace($request->root(), '', $request->fullUrl()), -254),
             'request_headers_json' => $requestHeadersJson,
-            'request_body_json' => $request->isJson() ? $this->scrubPasswords($request->getContent()) : null,
+            'request_body_json' => $request->isJson() ? $this->redactPasswords($request->getContent()) : null,
             'response_body_json' => $validateJson($responseBodyJson) ? $responseBodyJson : "[\"".addslashes($responseBodyJson)."\"]",
             'user_id' => $userId,
             'user_ip' => $request->ip(),
@@ -227,9 +227,9 @@ class Gander
      * passwords to the db.
      *
      * @param  String $json The json body
-     * @return ?String The new json body with password scrubbed
+     * @return ?String The new json body with passwords redacted
      */
-    private function scrubPasswords(String $json): ?String
+    private function redactPasswords(String $json): ?String
     {
         /**
          * Get the keys that contain passwords from the config
@@ -254,13 +254,24 @@ class Gander
                 return in_array($k, $passwordKeys) ? "*******" : $v;
             };
             foreach($j as $k => $v) {
-                $j[$k] = is_scalar($v) || is_null($v) ? $f($k, $j[$k]) : $r($j[$k]);
+                // handle string of json
+                if(is_string($v) && is_array(json_decode($v, true))) {
+                    $j[$k] = json_encode($r(json_decode($j[$k], true)));
+                }
+                // handle any other string or number or null
+                else if(is_scalar($v) || is_null($v)) {
+                    $j[$k] = $f($k, $j[$k]);
+                }
+                // handle any array or object
+                else {
+                    $j[$k] = $r($j[$k]);
+                }
             }
             return $j;
         };
 
         /**
-         * Return json body as string with password values scrubbed
+         * Return json body as string with password values redacted
          */
         return $v($json) ? json_encode($r(json_decode($json, true))) : null;
     }
@@ -277,12 +288,12 @@ class Gander
         foreach($request->headers->all() as $k => $v) {
             foreach($v as $v1) {
                 if(strlen($v1) > 0) {
-                    $curl[] = "-H \"$k: $v1\"";
+                    $curl[] = "-H \"$k: ".addcslashes($v1, "\"\\")."\"";
                 }
             }
         }
         $curl[] = "\"".$request->fullUrl()."\"";
-        $curl[] = $request->isJson() ? "-d \"".addslashes($this->scrubPasswords($request->getContent()))."\"" : null;
-        return join(" \\".PHP_EOL, $curl)."--compressed";
+        $curl[] = $request->isJson() ? "-d '".json_encode(json_decode($this->redactPasswords($request->getContent())))."'" : null;
+        return join(" \\".PHP_EOL, $curl)." --compressed";
     }
 }
