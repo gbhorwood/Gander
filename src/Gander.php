@@ -293,7 +293,7 @@ class Gander
             }
         }
         $curl[] = "\"".$request->fullUrl()."\"";
-        $curl[] = $request->isJson() ? "-d '".json_encode(json_decode($this->redactPasswords($request->getContent())))."'" : null;
+        $curl[] = $request->isJson() ? "-d '".json_encode(json_decode($this->redactPasswords($request->getContent())), JSON_UNESCAPED_SLASHES)."'" : null;
         return join(" \\".PHP_EOL, $curl)." --compressed";
     }
 }
