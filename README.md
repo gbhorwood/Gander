@@ -86,6 +86,8 @@ Here, the call to `Gander::track()` in both `getNumber()` and `generateNumber()`
 
 If `GANDER_ENABLE_STACK_TIMERS` is set to `true`, each call to `Gander::track()` will log the elapsed time, in seconds, since the last call to `track`.
 
+Since logs written using `track()` are tied to the current request, extra steps are needed to write logs after the request has completed, ie. when using queued jobs. See 'Writing logs from a queued job' below.
+
 ## Generating a client
 Data logged by Gander can be viewed with a javascript client that runs in your browser. A client can be created by calling the gander artisan command in the root directory of your api.
 
@@ -175,6 +177,73 @@ When creating a client, you can assign it a custom key name to make key manageme
 
 ```shell
 php artisan gbhorwood:gander --create-client --key-name=<custom key name>
+```
+
+## Writing logs from a queued job
+Gander logs are tied to requests. However, logs can still be written to a request after the request terminates, ie. in a queued job, by passing the request id to `track()`.
+
+The request id can be retrieved using the method:
+
+```php
+$requestId = \Gbhorwood\Gander\Gander::requestId()
+```
+
+The call to `track()` can accept the request id as an optional argument:
+
+```php
+\Gbhorwood\Gander\Gander::track("message", $requestId)
+```
+
+To use this method to write logs in queued jobs, the request id must be retrieved in the controller and passed to the job. For instance:
+
+In the controller, harvest the request id and pass as a constructor argument to the job class.
+```php
+<?php
+namespace App\Http\Controllers\api;
+
+use Gbhorwood\Gander\Gander;
+use App\Jobs\MyJob;
+
+/**
+ * The controller
+ */
+public function myController(Request $request): JsonResponse
+{
+    // get the id of this request
+    $requestId = Gander::requestId();
+
+    // pass the request id to the job
+    dispatch(new MyJob($requestId));
+}
+```
+
+In the job, accept the request id as an argument and use it when calling `Gander::track()`.
+```php
+<?php
+
+namespace App\Jobs;
+
+use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldBeUnique;
+use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Foundation\Bus\Dispatchable;
+use Illuminate\Queue\InteractsWithQueue;
+use Illuminate\Queue\SerializesModels;
+
+use Gbhorwood\Gander\Gander;
+
+/**
+ * The job
+ */
+class MyJob implements ShouldQueue
+{
+    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+
+    public function __construct(String $requestId)
+    {
+        Gander::track("a message", $requestId);
+    }
+}
 ```
 
 ## Writing your own client
