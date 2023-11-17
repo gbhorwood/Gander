@@ -4,6 +4,7 @@ namespace Gbhorwood\Gander;
 
 use Closure;
 
+use DB;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -30,6 +31,11 @@ class Gander
     protected static array $stack = [];
 
     /**
+     * String uuid of the request
+     */
+    protected static String $requestId;
+
+    /**
      * Middleware to track and write request and stack logs.
      *
      * @param  Request $request
@@ -48,7 +54,7 @@ class Gander
         /**
          * Set id that references stack entries to a request entry
          */
-        $requestId = self::randUniqueId();
+        self::$requestId = self::randUniqueId();
 
         /**
          * User id, ie from passport, if any
@@ -117,7 +123,7 @@ class Gander
          * Insert request
          */
         $requestInsert = [
-            'request_id' => $requestId,
+            'request_id' => self::$requestId,
             'method' => $request->method(),
             'endpoint' => $request->route()->uri,
             'response_status' => $response->status(),
@@ -138,9 +144,9 @@ class Gander
          * Insert stack, if any
          */
         if(count(self::$stack) > 0) {
-            $stackInserts = array_map(function ($s) use ($requestId, $userId) {
+            $stackInserts = array_map(function ($s) use ($userId) {
                 return [
-                    'request_id' => $requestId,
+                    'request_id' => self::$requestId,
                     'sequence' => $s['sequence'],
                     'user_id' => $userId,
                     'file' => substr(str_replace(base_path(), '', $s['file']), -254), // truncate from the right to col length
@@ -166,12 +172,23 @@ class Gander
     }
 
     /**
+     * Get the id of the request
+     *
+     * @return String
+     */
+    public static function requestId(): String
+    {
+        return self::$requestId;
+    }
+
+    /**
      * Add a tracking call to the stack for this request
      *
-     * @param  String $message Optional custom message to add to the tracking call
+     * @param  String $message   Optional custom message to add to the tracking call
+     * @param  String $requestId The optional id of the request to append this track to
      * @return bool
      */
-    public static function track(String $message = null): bool
+    public static function track(String $message = null, String $requestId = null): bool
     {
         /**
          * If gander is not enabled, return
@@ -186,6 +203,35 @@ class Gander
          */
         $e = new \Exception();
         $t = $e->getTrace();
+        $file = $t[0]['file'];
+        $function = $t[1]['function'];
+        $line = $t[0]['line'];
+
+        /**
+         * Handle requestId not null, ie. if called from a queued job
+         * Insert directly.
+         */
+        if(!is_null($requestId)) {
+            $sql =<<<SQL
+            INSERT
+            INTO        gander_stack
+            VALUES     (null,
+                        '$requestId',
+                        (SELECT MAX(sequence) + 1
+                         FROM   gander_stack gs
+                         WHERE  gs.request_id = '$requestId'),
+                        null,
+                        '$file',
+                        '$function',
+                        $line,
+                        0.0,
+                        "$message",
+                        NOW(),
+                        NOW())
+            SQL;
+            DB::insert($sql);
+            return true;
+        }
 
         /**
          * Calculate time in seconds since last call to this function for this request
@@ -196,11 +242,14 @@ class Gander
             $elapsedSeconds = $nowMicroseconds - self::$stack[count(self::$stack) - 1]['now_microseconds'];
         }
 
+        /**
+         * Add to stack to insert at end of request
+         */
         self::$stack[] = [
             'sequence' => count(self::$stack) > 0 ? count(self::$stack) + 1 : 1,
-            'file' => $t[0]['file'],
-            'function' => $t[1]['function'],
-            'line' => $t[0]['line'],
+            'file' => $file,
+            'function' => $function, 
+            'line' => $line,
             'now_microseconds' => $nowMicroseconds,
             'elapsed_seconds' => $elapsedSeconds,
             'message' => $message,
@@ -259,7 +308,7 @@ class Gander
                     $j[$k] = json_encode($r(json_decode($j[$k], true)));
                 }
                 // handle any other string or number or null
-                else if(is_scalar($v) || is_null($v)) {
+                elseif(is_scalar($v) || is_null($v)) {
                     $j[$k] = $f($k, $j[$k]);
                 }
                 // handle any array or object
