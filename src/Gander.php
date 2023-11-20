@@ -212,6 +212,7 @@ class Gander
          * Insert directly.
          */
         if(!is_null($requestId)) {
+            $message = DB::connection()->getPdo()->quote($message);
             $sql =<<<SQL
             INSERT
             INTO        gander_stack
