@@ -1,5 +1,6 @@
 # Gander
 [![License](http://poser.pugx.org/gbhorwood/gander/license)](https://packagist.org/packages/gbhorwood/gander)
+[![Version](http://poser.pugx.org/gbhorwood/gander/version)](https://packagist.org/packages/gbhorwood/gander)
 [![License](http://poser.pugx.org/gbhorwood/gander/require/php)](https://packagist.org/packages/gbhorwood/gander)
 
 Gander is an inspector and logger for restful Laravel apis. Gander allows logging of request/responses, as well as optional logging of events in your source code. Gander reports are viewed with an exported javascript client which can be hosted anywhere. Gander was developed as an internal-use tool for [fruitbat studios](https://fruitbat.studio)/cloverhitch technologies/kludgetastic implementations.
