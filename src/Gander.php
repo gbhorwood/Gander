@@ -217,7 +217,11 @@ class Gander
             INTO        gander_stack
             VALUES     (null,
                         '$requestId',
-                        (SELECT MAX(sequence) + 1
+                        (SELECT CASE
+                                WHEN COUNT(*) > 0
+                                THEN MAX(sequence) + 1
+                                ELSE 1
+                                END
                          FROM   gander_stack gs
                          WHERE  gs.request_id = '$requestId'),
                         null,
