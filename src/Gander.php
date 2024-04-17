@@ -107,10 +107,10 @@ class Gander
 
         /**
          * Function to validate if a string is json
-         * @param  String $value
+         * @param  ?String $value
          * @return bool
          */
-        $validateJson = function (String $value): bool {
+        $validateJson = function (?String $value): bool {
             try {
                 json_decode($value, true, 512, JSON_THROW_ON_ERROR);
                 return true;
@@ -212,6 +212,7 @@ class Gander
          * Insert directly.
          */
         if(!is_null($requestId)) {
+            $message = DB::connection()->getPdo()->quote($message);
             $sql =<<<SQL
             INSERT
             INTO        gander_stack
